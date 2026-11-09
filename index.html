@@ -567,6 +567,22 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 #vBubble .vb-frog{width:3.4em; height:3.4em}
 #vBubble small.vb-cmd{display:block; width:fit-content}
 .pk-rule-sum{font-size:max(12px,min(2.6cqw,5.6cqh))}
+/* 시계 창 날짜 넘기기: 평소엔 흐리게, 손이나 마우스를 대면 또렷하게 */
+.now-left{position:relative}
+.day-nav{position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:max(40px,7cqh); height:max(80px,22cqh); border:none; border-radius:16px; background:rgba(95,208,166,.12);
+  color:#0f7d61; font-size:max(28px,8cqh); line-height:1; cursor:pointer; opacity:.07; transition:opacity .2s, background .2s}
+.day-nav.prev{left:-.4em} .day-nav.next{right:-.4em}
+.c-now:hover .day-nav{opacity:.45} .day-nav:hover,.day-nav:focus-visible{opacity:1!important; background:rgba(95,208,166,.25)}
+@media (hover:none){ .day-nav{opacity:.3} }
+#date .rel{display:inline-block; font-size:.7em; background:var(--lemon); color:var(--ink); border-radius:999px; padding:.05em .6em; vertical-align:.12em}
+.day-back{border:1px solid #5fd0a6; background:#e8f6f0; color:#0f7d61; border-radius:999px; padding:.25em 1em; font-family:var(--display); font-size:max(13px,min(1.8cqw,3.4cqh)); cursor:pointer}
+.c-now.other-day #wx{visibility:hidden}
+.c-now.other-day .periods{background:#fffbea; border-radius:14px}
+/* 급식 날짜 넘기기 */
+.c-meal .ml-arrow{padding:.1em .45em; margin-left:.3em}
+.c-meal .ml-arrow + .ml-arrow{margin-left:.15em}
+.cal .day.hol{color:#e0453a}
+.cal-neis{margin-left:.3em}
 </style>
 </head>
 <body>
@@ -616,7 +632,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
     <button class="mini now-big" type="button" data-big>크게</button>
     <div class="now-wrap">
       <div class="now-left">
+        <button class="day-nav prev" id="dayPrev" type="button" aria-label="전 날 보기">‹</button>
+        <button class="day-nav next" id="dayNext" type="button" aria-label="다음 날 보기">›</button>
         <div id="date">오늘</div>
+        <button class="day-back" id="dayBack" type="button" hidden>오늘로 돌아가기</button>
         <div class="wx" id="wx" aria-live="off"></div>
         <div class="time" id="clock">00:00<span class="sec">00</span></div>
         <div class="now-box"><span class="now-chip">지금</span><span id="activity">준비 중</span><span id="actPlan" hidden></span></div>
@@ -629,7 +648,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   <section class="cell c-cal" id="cCal">
     <div class="head"><span class="tag t-violet">달력</span><span class="sp"></span><button class="mini" type="button" data-big>크게</button></div>
     <div class="body">
-      <div class="cal-nav"><button class="mini" id="calPrev" type="button" aria-label="지난달">◀</button><span id="calTitle"></span><button class="mini" id="calNext" type="button" aria-label="다음 달">▶</button><button class="mini" id="calToday" type="button">오늘</button></div>
+      <div class="cal-nav"><button class="mini" id="calPrev" type="button" aria-label="지난달">◀</button><span id="calTitle"></span><button class="mini" id="calNext" type="button" aria-label="다음 달">▶</button><button class="mini" id="calToday" type="button">오늘</button><button class="mini cal-neis" id="calNeis" type="button" title="나이스에서 이 달 학사 일정 다시 가져오기">학사 일정</button></div>
       <div class="cal" id="cal"></div>
       <div class="ev-box">
         <h3 id="evTitle"></h3>
@@ -677,15 +696,16 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   </section>
 
   <section class="cell lo c-meal">
-    <div class="head"><span class="tag t-coral">오늘 급식</span><span class="sp"></span>
+    <div class="head"><span class="tag t-coral" id="mealTag">오늘 급식</span><button class="mini ml-arrow" id="mlPrev" type="button" aria-label="전 날 급식">◀</button><button class="mini ml-arrow" id="mlNext" type="button" aria-label="다음 날 급식">▶</button><span class="sp"></span>
       <button class="mini" id="mealInBtn" type="button">식단 넣기</button><button class="mini" type="button" data-big>크게</button></div>
     <div class="body">
       <div class="menu" id="menuView"></div>
       <div class="meal-in" id="mealIn" hidden>
-        <div class="muted">학교 누리집이나 나이스의 식단표를 한 달 치 그대로 복사해 붙여 넣으면 날짜별로 정리해 드려요. 오늘 메뉴만 적어도 돼요.</div>
+        <div class="muted"><b>인터넷에서 가져오기</b>를 누르면 나이스(교육정보 개방 포털)에서 우리 학교 한 달 식단을 찾아 날짜별로 넣어 줘요. 식단이 없는 날을 열면 저절로 찾아요.<br>안 될 때는 학교 누리집이나 나이스의 식단표를 한 달 치 그대로 복사해 붙여 넣으면 날짜별로 정리해 드려요. 오늘 메뉴만 적어도 돼요.</div>
         <textarea class="inp" id="mealText" placeholder="여기에 식단표를 붙여 넣어요"></textarea>
         <div class="btns" style="justify-content:flex-start">
-          <button class="b go" id="mealParse" type="button">날짜별로 정리하기</button>
+          <button class="b go" id="mealNet" type="button">인터넷에서 가져오기</button>
+          <button class="b" id="mealParse" type="button">날짜별로 정리하기</button>
           <button class="b" id="mealToday" type="button">오늘 메뉴로 저장</button>
           <button class="b" id="mealClose" type="button">닫기</button>
         </div>
@@ -795,7 +815,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 
 <canvas id="fx" aria-hidden="true"></canvas>
 <div id="vBubble" role="status" aria-live="polite" hidden></div>
-<div id="verTag">교실용 · 11월 9일 판 (3)</div>
+<div id="verTag">교실용 · 11월 9일 판 (5)</div>
 
 <div id="bkDlg" hidden>
   <div class="roster bk" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
@@ -821,6 +841,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
       <label class="cfg-row"><input type="checkbox" id="cfgSfx"> 효과음 (부를 때 띵, 뽑기·별 소리)</label>
       <label class="cfg-row"><input type="checkbox" id="cfgSpeak"> 정개굴이 말소리로 대답하기</label>
       <p>말소리를 끄면 화면 아래 말풍선으로만 대답해요. 타이머가 끝나는 소리는 늘 나요.</p></div>
+    <div class="bk-step"><b>급식 식단을 찾을 학교</b>
+      <input class="inp" id="cfgSchool" aria-label="학교 이름">
+      <p>경상남도 학교 가운데에서 찾아요. 학교 이름은 '용원초등학교'처럼 정식 이름으로 써 주세요.</p>
+      <b>나이스 인증키 (없어도 돼요)</b>
+      <input class="inp" id="cfgNeis" aria-label="나이스 인증키" placeholder="없으면 비워 두세요">
+      <p>없어도 식단을 가져와요. 교육정보 개방 포털(open.neis.go.kr)에서 무료로 받은 키를 넣으면 한 번에 더 빨리 가져와요.</p></div>
     <div class="btns" style="justify-content:flex-start"><button class="b" id="cfgReset" type="button">처음 설정으로</button></div>
   </div>
 </div>
@@ -1036,7 +1062,12 @@ const SCHEDULE = [
 ];
 const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
 const todayList = day => SCHEDULE.filter(r => !(r.skipDays||[]).includes(day));
-const planOf = n => ((S.plan[dkey()] || {})[n] || '').trim();
+let dayOff = 0, dayOffT;
+var mealOff = 0, MEAL_NET = {busy:false, tried:{}, fail:{}};
+function mealDay(){ return offDay(mealOff); }
+const offDay = o => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + o); return d; };
+const viewDay = () => offDay(dayOff);
+const planOf = (n, d = viewDay()) => ((S.plan[dkey(d)] || {})[n] || '').trim();
 function activity(now){
   const day = now.getDay(), mins = now.getHours()*60 + now.getMinutes();
   if (day === 0 || day === 6) return {text:'쉬는 날', idx:-1, list:[], mins};
@@ -1051,17 +1082,17 @@ function activity(now){
   else if (!short && mins >= toMin('12:50') && mins < toMin('13:00')) text = '청소 시간';
   else if (!short && mins >= toMin('13:40')) text = '하교 시간';
   else text = '쉬는 시간';
-  const plan = idx >= 0 && !ready ? planOf(list[idx].n) : '';
+  const plan = idx >= 0 && !ready ? planOf(list[idx].n, now) : '';
   return {text, plan, idx, list, mins, ready};
 }
 function renderPeriods(){
-  const day = new Date().getDay(), list = (day === 0 || day === 6) ? SCHEDULE.filter(r => !r.skipDays) : todayList(day);
+  const day = viewDay().getDay(), list = (day === 0 || day === 6) ? SCHEDULE.filter(r => !r.skipDays) : todayList(day);
   $('periods').innerHTML = list.map(r => {
     const ph = r.n === '점심시간' ? '' : '공부할 내용';
     return `<div class="per"><b>${r.n}</b><small>${r.s} ~ ${r.e}</small><input data-per="${r.n}" value="${esc(planOf(r.n))}" placeholder="${ph}" aria-label="${r.n} 공부할 내용"></div>`;
   }).join('');
   $('periods').querySelectorAll('[data-per]').forEach(inp => inp.oninput = () => {
-    const k = dkey(); S.plan[k] = S.plan[k] || {}; S.plan[k][inp.dataset.per] = inp.value; save();
+    const k = dkey(viewDay()); S.plan[k] = S.plan[k] || {}; S.plan[k][inp.dataset.per] = inp.value; save(); armDayBack();
   });
 }
 let shownKey = '';
@@ -1070,15 +1101,15 @@ function tick(){
   const hm = `${p2(now.getHours())}:${p2(now.getMinutes())}`;
   $('clock').innerHTML = `${hm}<span class="sec">${p2(now.getSeconds())}</span>`;
   $('fClock').textContent = hm;
-  $('date').textContent = `${now.getMonth()+1}월 ${now.getDate()}일 ${DAYS[day]}`;
+  { const v = viewDay(); $('date').innerHTML = `${v.getMonth()+1}월 ${v.getDate()}일 ${DAYS[v.getDay()]}` + (dayOff ? ` <span class="rel">${relName(dayOff)}</span>` : ''); }
   if (dkey(now) !== shownKey){ shownKey = dkey(now); renderAll(); }
   const a = activity(now);
   $('activity').textContent = a.text; $('activity').classList.toggle('ready', !!a.ready);
   $('actPlan').textContent = a.plan || ''; $('actPlan').hidden = !a.plan;
   $('fAct').textContent = a.plan ? `${a.text} · ${a.plan}` : a.text;
   document.querySelectorAll('.per').forEach((el,i) => {
-    el.classList.toggle('now', i === a.idx);
-    el.classList.toggle('done', i !== a.idx && !!a.list[i] && a.mins >= toMin(a.list[i].e));
+    el.classList.toggle('now', !dayOff && i === a.idx);
+    el.classList.toggle('done', !dayOff && i !== a.idx && !!a.list[i] && a.mins >= toMin(a.list[i].e));
   });
 }
 
@@ -1101,6 +1132,7 @@ const weekRange = k => { const a = new Date(weekKey(k) + 'T00:00'), b = new Date
 const wks = k => (S.weekly || {})[weekKey(k)] || [];
 function renderCal(){
   $('calTitle').textContent = `${calY}년 ${calM+1}월`;
+  if (typeof autoSchool === 'function') autoSchool(calY, calM);
   const first = new Date(calY, calM, 1), start = new Date(calY, calM, 1 - first.getDay());
   const cells = ['일','월','화','수','목','금','토'].map(d => `<div class="dow">${d}</div>`);
   const weeks = Math.ceil((first.getDay() + new Date(calY, calM+1, 0).getDate()) / 7);
@@ -1110,6 +1142,7 @@ function renderCal(){
     if (d.getMonth() !== calM) cls.push('other');
     if (d.getDay() === 0) cls.push('sun'); if (d.getDay() === 6) cls.push('sat');
     if (k === dkey()) cls.push('today'); if (k === selDate) cls.push('sel');
+    if ((S.events[k] || []).some(x => x.h)) cls.push('hol');
     const v = visible(k), dots = (v.some(x => x.c === 's') ? '<i class="s"></i>' : '') + (v.some(x => x.c === 'w') ? '<i class="w"></i>' : '');
     cells.push(`<button class="${cls.join(' ')}" type="button" data-date="${k}" aria-label="${d.getMonth()+1}월 ${d.getDate()}일">${d.getDate()}<span class="dots">${dots}</span></button>`);
     if (d.getDay() === 6 && wks(k).length) cells.push(`<div class="wk">${wks(k).map(x => `<span title="${esc(x.t)}">${esc(x.t)}</span>`).join('')}</div>`);
@@ -1156,7 +1189,8 @@ function renderCal(){
   $('evIn').placeholder = evCat === 'k' ? '주간 일정 적기' : evCat === 'w' ? '업무 적기' : '일정 적기';
 }
 function renderTodayEv(){
-  $('todayEv').innerHTML = wks(dkey()).map(x => `<span class="k">${esc(x.t)}</span>`).join('') + evs(dkey()).filter(x => x.c === 's').map(x => `<span>${esc(x.t)}</span>`).join('');
+  const vk = dkey(viewDay());
+  $('todayEv').innerHTML = wks(vk).map(x => `<span class="k">${esc(x.t)}</span>`).join('') + evs(vk).filter(x => x.c === 's').map(x => `<span>${esc(x.t)}</span>`).join('');
 }
 function addEvent(){
   const t = $('evIn').value.trim(); if (!t) return;
@@ -1240,11 +1274,14 @@ $('tReset').onclick = () => setT(tInit || 300);
 /* ===== 급식 ===== */
 const MEAL_CELL = document.querySelector('.c-meal');
 function renderMeal(){
-  const m = S.meals[dkey()] || '';
-  const wd = new Date().getDay();
+  const md = mealDay(), mk = dkey(md), m = S.meals[mk] || '';
+  const wd = md.getDay();
+  $('mealTag').textContent = mealOff ? `${md.getMonth() + 1}/${md.getDate()}(${DAYS[wd][0]}) ${mealOff === 1 ? '내일 ' : ''}급식` : '오늘 급식';
+  $('mealToday').textContent = mealOff ? '이 날 메뉴로 저장' : '오늘 메뉴로 저장';
   const items = m.split(/\n|,|·/).map(x => x.trim()).filter(Boolean);
   if (items.length) $('menuView').innerHTML = items.map((x, i) => `<span class="mi m${i % 4}">${esc(x)}</span>`).join('');
-  else $('menuView').textContent = wd === 0 || wd === 6 ? '오늘은 급식이 없어요' : '식단 넣기를 눌러 이번 달 식단을 넣어 주세요';
+  else $('menuView').textContent = wd === 0 || wd === 6 ? '이 날은 급식이 없어요' : MEAL_NET.busy ? '인터넷에서 식단을 찾는 중이에요…' : MEAL_NET.fail[mk.slice(0, 7)] ? '식단을 찾지 못했어요. 식단 넣기로 넣어 주세요' : '식단을 찾는 중이에요…';
+  if (!items.length && wd !== 0 && wd !== 6) autoMeal(md);
   $('menuView').classList.toggle('empty', !items.length);
   fitMeal();
 }
@@ -1257,7 +1294,7 @@ $('mealInBtn').onclick = () => mealPanel($('mealIn').hidden);
 $('mealClose').onclick = () => mealPanel(false);
 $('mealToday').onclick = () => {
   const t = $('mealText').value.trim(); if (!t) return;
-  S.meals[dkey()] = t; save(); renderMeal(); $('mealText').value = ''; mealPanel(false);
+  S.meals[dkey(mealDay())] = t; save(); renderMeal(); $('mealText').value = ''; mealPanel(false);
 };
 const cleanMenu = s => s.replace(/[\d.,]+\s*kcal/gi, '').split(/\n|<br\s*\/?>|,|\s{2,}/i).map(x => x.replace(/\([\d.\s]+\)|[\d.]+(?=\s*$)|\*|&/g,'').replace(/\s+/g,' ').trim())
   .filter(x => x && !/kcal|칼로리|열량|단백질|원산지/i.test(x)).join('\n');
@@ -2066,8 +2103,10 @@ function runCommand(raw){
     return reply(`지금은 ${h < 12 ? '오전' : '오후'} ${h % 12 || 12}시 ${m}분, ${ieyo(a.plan ? a.text + ' ' + a.plan + ' 시간' : a.text)}`, raw);
   }
   if (/급식|점심|메뉴/.test(c)){
-    const menu = (S.meals[dkey()] || '').split('\n').filter(Boolean);
-    return reply(menu.length ? `오늘 급식은 ${ieyo(menu.join(', '))}` : '오늘 급식 메뉴가 아직 없어요', raw);
+    const tm = /내일/.test(c), dd = tm ? nextSchoolDay(1) : new Date(), wh = tm ? '내일' : '오늘';
+    if (tm){ mealOff = Math.round((dd - offDay(0)) / 864e5); renderMeal(); }
+    const menu = (S.meals[dkey(dd)] || '').split('\n').filter(Boolean);
+    return reply(menu.length ? `${wh} 급식은 ${ieyo(menu.join(', '))}` : `${wh} 급식 메뉴가 아직 없어요`, raw);
   }
   if (/일정/.test(c)){
     const list = wks(dkey()).map(x => x.t).concat(evs(dkey()).filter(x => x.c === 's').map(x => x.t));
@@ -2157,7 +2196,7 @@ $('mgPop').addEventListener('click', () => setMg(false));
 document.addEventListener('click', e => { if (!e.target.closest('.mg')) setMg(false); });
 
 /* ===== 설정 ===== */
-function cfg(){ return Object.assign({title:'함께 *어울려* 매일 즐겁게 *자라는* 우리반', sub:'2026. 용원초 2학년 2반', speak:false, sfx:true}, S.cfg || {}); }
+function cfg(){ return Object.assign({title:'함께 *어울려* 매일 즐겁게 *자라는* 우리반', sub:'2026. 용원초 2학년 2반', speak:false, sfx:true, school:'용원초등학교', neisKey:''}, S.cfg || {}); }
 function renderTitle(){
   const c = cfg();
   $('mainTitle').innerHTML = esc(c.title).replace(/\*(.+?)\*/g, '<em>$1</em>');
@@ -2167,7 +2206,7 @@ function renderTitle(){
 function setCfg(k, v){ S.cfg = Object.assign({}, S.cfg || {}, {[k]: v}); save(); }
 function openCfg(open){
   $('cfgDlg').hidden = !open;
-  if (open){ const c = cfg(); $('cfgMain').value = c.title; $('cfgSub').value = c.sub; $('cfgSfx').checked = c.sfx; $('cfgSpeak').checked = c.speak; $('cfgClose').focus(); }
+  if (open){ const c = cfg(); $('cfgMain').value = c.title; $('cfgSub').value = c.sub; $('cfgSfx').checked = c.sfx; $('cfgSpeak').checked = c.speak; $('cfgSchool').value = c.school; $('cfgNeis').value = c.neisKey; $('cfgClose').focus(); }
 }
 $('cfgBtn').onclick = () => openCfg(true);
 $('cfgClose').onclick = () => openCfg(false);
@@ -2554,6 +2593,138 @@ $('pkSetDone').onclick = () => pkSetOpen(false);
 $('pkSetClear').onclick = () => { S.pickRule = {}; save(); renderPkRule(); };
 document.querySelectorAll('[data-pk]').forEach(b => b.addEventListener('click', () => { if (!$('pkSet').hidden){ $('pkSet').hidden = true; $('pkRuleBtn').classList.remove('on'); } }));
 renderPkRule();
+/* ===== 시계 창: 날짜 넘기기 (주말은 건너뜀, 3분 동안 손대지 않으면 오늘로) ===== */
+function relName(o){ return {'-2':'그저께', '-1':'어제', '1':'내일', '2':'모레'}[o] || (o > 0 ? `${o}일 뒤` : `${-o}일 전`); }
+function stepSchool(from, dir){ let o = from + dir; while ([0, 6].includes(offDay(o).getDay())) o += dir; return o; }
+function nextSchoolDay(dir){ return offDay(stepSchool(0, dir)); }
+function armDayBack(){ clearTimeout(dayOffT); if (dayOff) dayOffT = setTimeout(() => setDayOff(0), 180000); }
+function setDayOff(o){
+  dayOff = o; armDayBack();
+  const c = document.querySelector('.c-now'); c.classList.toggle('other-day', !!o);
+  $('dayBack').hidden = !o; renderPeriods(); renderTodayEv(); tick();
+}
+$('dayPrev').onclick = () => setDayOff(stepSchool(dayOff, -1));
+$('dayNext').onclick = () => setDayOff(stepSchool(dayOff, 1));
+$('dayBack').onclick = () => setDayOff(0);
+
+/* ===== 급식: 다른 날 보기 ===== */
+$('mlPrev').onclick = () => { mealOff = stepSchool(mealOff, -1); renderMeal(); };
+$('mlNext').onclick = () => { mealOff = stepSchool(mealOff, 1); renderMeal(); };
+// 밤 사이 날짜가 바뀌면 다시 오늘로
+let mealDayKey = dkey();
+setInterval(() => { if (dkey() !== mealDayKey){ mealDayKey = dkey(); mealOff = 0; if (dayOff) setDayOff(0); renderMeal(); } }, 60000);
+
+/* ===== 급식: 나이스(교육정보 개방 포털)에서 식단 가져오기 ===== */
+const NEIS = 'https://open.neis.go.kr/hub/';
+const ymd = d => dkey(d).replace(/-/g, '');
+function neisKeyQ(){ const k = (cfg().neisKey || '').trim(); return k ? '&KEY=' + encodeURIComponent(k) : ''; }
+async function neisSchool(){
+  const name = (cfg().school || '용원초등학교').trim();
+  let c = null; try{ c = JSON.parse(localStorage.getItem('jgg-neis') || 'null'); }catch(e){}
+  if (c && c.name === name && c.code) return c;
+  const j = await (await fetch(`${NEIS}schoolInfo?Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=S10&SCHUL_NM=${encodeURIComponent(name)}${neisKeyQ()}`)).json();
+  const rows = (j.schoolInfo && j.schoolInfo[1] && j.schoolInfo[1].row) || [];
+  const r = rows.find(x => x.SCHUL_NM === name) || rows.find(x => /초등/.test(x.SCHUL_NM)) || rows[0];
+  if (!r) throw new Error('no_school');
+  c = {name, office:r.ATPT_OFCDC_SC_CODE, code:r.SD_SCHUL_CODE, full:r.SCHUL_NM};
+  try{ localStorage.setItem('jgg-neis', JSON.stringify(c)); }catch(e){}
+  return c;
+}
+async function neisMonth(y, m){
+  const sc = await neisSchool(), last = new Date(y, m + 1, 0).getDate(), key = neisKeyQ(), out = {};
+  // 인증키가 없으면 한 번에 5개까지만 주므로 한 주씩 나눠서 물어봄
+  const spans = key ? [[1, last]] : [];
+  if (!key) for (let d = 1; d <= last; d += 7) spans.push([d, Math.min(last, d + 6)]);
+  const res = await Promise.all(spans.map(([a, b]) =>
+    fetch(`${NEIS}mealServiceDietInfo?Type=json&pIndex=1&pSize=${key ? 100 : 5}&ATPT_OFCDC_SC_CODE=${sc.office}&SD_SCHUL_CODE=${sc.code}&MLSV_FROM_YMD=${ymd(new Date(y, m, a))}&MLSV_TO_YMD=${ymd(new Date(y, m, b))}${key}`).then(r => r.json())));
+  res.forEach(j => {
+    const rows = (j.mealServiceDietInfo && j.mealServiceDietInfo[1] && j.mealServiceDietInfo[1].row) || [];
+    rows.forEach(r => {
+      if (rows.some(x => x.MLSV_YMD === r.MLSV_YMD && x.MMEAL_SC_CODE === '2') && r.MMEAL_SC_CODE !== '2') return; // 점심만
+      const k = `${r.MLSV_YMD.slice(0, 4)}-${r.MLSV_YMD.slice(4, 6)}-${r.MLSV_YMD.slice(6, 8)}`;
+      const menu = cleanMenu(String(r.DDISH_NM || ''));
+      if (menu) out[k] = menu;
+    });
+  });
+  return out;
+}
+async function fetchMeals(d, force){
+  const mon = dkey(d).slice(0, 7);
+  if (MEAL_NET.busy || (!force && MEAL_NET.tried[mon])) return null;
+  MEAL_NET.busy = true; MEAL_NET.tried[mon] = true; delete MEAL_NET.fail[mon];
+  try{
+    const got = await neisMonth(d.getFullYear(), d.getMonth()), ks = Object.keys(got);
+    if (!ks.length) throw new Error('empty');
+    ks.forEach(k => { if (force || !S.meals[k]) S.meals[k] = got[k]; });
+    save(); return ks.length;
+  }catch(e){ MEAL_NET.fail[mon] = true; return 0; }
+  finally{ MEAL_NET.busy = false; renderMeal(); }
+}
+function autoMeal(d){ if (navigator.onLine !== false) setTimeout(() => fetchMeals(d, false), 50); }
+$('mealNet').onclick = async () => {
+  const d = mealDay(), btn = $('mealNet');
+  btn.disabled = true; $('mealMsg').textContent = '나이스에서 식단을 찾는 중이에요…';
+  const n = await fetchMeals(d, true); btn.disabled = false;
+  if (n){ $('mealMsg').textContent = `${d.getMonth() + 1}월 식단 ${n}일 치를 넣었어요.`; setTimeout(() => mealPanel(false), 1200); }
+  else $('mealMsg').textContent = '식단을 가져오지 못했어요. 인터넷 연결과 설정의 학교 이름을 확인하거나, 식단표를 아래에 붙여 넣어 주세요.';
+};
+$('cfgSchool').oninput = e => { setCfg('school', e.target.value.trim()); try{ localStorage.removeItem('jgg-neis'); }catch(_){} MEAL_NET.tried = {}; };
+$('cfgNeis').oninput = e => { setCfg('neisKey', e.target.value.trim()); MEAL_NET.tried = {}; };
+renderMeal();
+/* ===== 나이스 학사 일정 → 달력 (학교 일정으로 넣음, 휴업일·공휴일은 빨간 날) ===== */
+var CAL_NET = {busy:false, tried:{}};
+async function neisRange(sc, a, b, key, page = 1){
+  const u = `${NEIS}SchoolSchedule?Type=json&pIndex=${page}&pSize=${key ? 300 : 5}&ATPT_OFCDC_SC_CODE=${sc.office}&SD_SCHUL_CODE=${sc.code}&AA_FROM_YMD=${ymd(a)}&AA_TO_YMD=${ymd(b)}${key}`;
+  const j = await (await fetch(u)).json();
+  const rows = (j.SchoolSchedule && j.SchoolSchedule[1] && j.SchoolSchedule[1].row) || [];
+  const total = j.SchoolSchedule && j.SchoolSchedule[0].head ? +((j.SchoolSchedule[0].head[0] || {}).list_total_count || rows.length) : rows.length;
+  // 인증키가 없으면 5개까지만 주므로, 더 있으면 기간을 반으로 나눠 다시 물어봄
+  if (!key && page === 1 && total > rows.length && b - a >= 864e5){
+    const mid = new Date(a); mid.setDate(a.getDate() + Math.floor((b - a) / 864e5 / 2));
+    const next = new Date(mid); next.setDate(mid.getDate() + 1);
+    return (await neisRange(sc, a, mid, key)).concat(await neisRange(sc, next, b, key));
+  }
+  // 하루에 5개가 넘으면 다음 쪽도 물어봄
+  if (!key && total > page * 5 && rows.length === 5 && page < 6) return rows.concat(await neisRange(sc, a, b, key, page + 1));
+  return rows;
+}
+async function fetchSchoolCal(y, m, force){
+  const mon = `${y}-${p2(m + 1)}`;
+  if (CAL_NET.busy) return null;
+  CAL_NET.busy = true;
+  try{
+    const sc = await neisSchool(), key = neisKeyQ();
+    const rows = await neisRange(sc, new Date(y, m, 1, 12), new Date(y, m + 1, 0, 12), key);
+    if (force) Object.keys(S.events).filter(k => k.startsWith(mon)).forEach(k => { S.events[k] = S.events[k].filter(x => x.src !== 'neis'); if (!S.events[k].length) delete S.events[k]; });
+    let n = 0;
+    rows.forEach(r => {
+      const t = String(r.EVENT_NM || '').trim(); if (!t || /토요휴업일/.test(t)) return;
+      const k = `${r.AA_YMD.slice(0, 4)}-${r.AA_YMD.slice(4, 6)}-${r.AA_YMD.slice(6, 8)}`, list = S.events[k] = S.events[k] || [];
+      if (list.some(x => x.t === t)) return;
+      const ev = {id: 'n' + r.AA_YMD + uid36(), t, c:'s', src:'neis'};
+      if (/휴업|공휴/.test(r.SBTR_DD_SC_NM || '') || /방학|재량휴업|개교기념/.test(t)) ev.h = 1;
+      list.push(ev); n++;
+    });
+    S.neisCal = Object.assign({}, S.neisCal, {[mon]: 1});
+    save(); renderCal(); renderTodayEv();
+    return n;
+  }catch(e){ return -1; }
+  finally{ CAL_NET.busy = false; }
+}
+// 처음 보는 달이면 한 번만 저절로 가져옴 (지운 일정이 다시 생기지 않도록 가져온 달을 기억)
+function autoSchool(y, m){
+  if (!CAL_NET) return;
+  const mon = `${y}-${p2(m + 1)}`;
+  if (CAL_NET.tried[mon] || (S.neisCal || {})[mon] || navigator.onLine === false) return;
+  CAL_NET.tried[mon] = true; setTimeout(() => fetchSchoolCal(y, m, false), 80);
+}
+$('calNeis').onclick = async () => {
+  const b = $('calNeis'); b.disabled = true; b.textContent = '찾는 중…';
+  const n = await fetchSchoolCal(calY, calM, true);
+  b.disabled = false; b.textContent = '학사 일정';
+  bubble(n < 0 ? '학사 일정을 가져오지 못했어요. 인터넷과 설정의 학교 이름을 확인해 주세요' : `${calM + 1}월 학사 일정을 새로 넣었어요${n ? ` (${n}개)` : ''}`, '', 4000);
+};
+renderCal();
 </script>
 </body>
 </html>
