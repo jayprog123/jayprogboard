@@ -678,6 +678,20 @@ body.mobile > *:not(#mob):not(#syDlg):not(#vBubble):not(script):not(style){displ
 .mob-foot .b{flex:1; padding:.7em 0}
 body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto}
 
+.mob-tabs{grid-template-columns:repeat(3,1fr)}
+.mb-kids.sm{grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:6px}
+.mb-kids.sm .mb-kid{padding:6px 2px; position:relative} .mb-kids.sm .mb-kid b{font-size:1.1em} .mb-kids.sm .mb-kid span{font-size:.75em}
+.mb-kid.ok{background:#e8f6f0; border-color:#5fd0a6} .mb-kid.ok b{color:#0f7d61}
+.mb-kid.on{background:var(--ink); color:#fff; border-color:var(--ink)} .mb-kid.on span{color:#fff}
+.mb-kid i{position:absolute; top:3px; right:5px; font-style:normal; font-size:.65em; background:#ffe17a; color:var(--ink); border-radius:999px; padding:0 .4em}
+.mb-chk{background:#fff; border:1px solid var(--line); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px}
+.mb-chk-h{display:flex; align-items:center; gap:8px} .mb-chk-h .inp{flex:1; min-width:0; font-size:16px} .mb-chk-h b{font-family:var(--display); font-weight:400; color:#0f7d61}
+.mb-chk-f{display:flex; gap:6px; justify-content:flex-end}
+.mb-note-add{align-items:stretch} .mb-note-add textarea{flex:1; font-size:16px}
+.mb-notes li{flex-direction:column; align-items:stretch}
+.mb-note-d{display:flex; align-items:center; gap:8px; justify-content:space-between} .mb-note-d .inp{font-size:15px; padding:.3em .5em}
+.mb-notes textarea{font-size:16px; width:100%; box-sizing:border-box}
+
 #verTag a{color:inherit; text-decoration:none} #verTag a:hover{text-decoration:underline}
 .mob-top small{font-family:var(--body); font-size:.6em; color:var(--ink-3)}
 .cfg-about p{color:var(--ink-2)} .cfg-about a{color:#0f7d61}
@@ -687,7 +701,7 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
 <div id="mob" hidden>
   <header class="mob-top"><b>개굴칠판 <small>입력</small></b><span class="sp"></span><span id="mobSync"></span></header>
   <div class="mob-date"><button class="mini" id="mbPrev" type="button" aria-label="전 날">◀</button><b id="mbDate"></b><button class="mini" id="mbNext" type="button" aria-label="다음 날">▶</button><button class="mini" id="mbToday" type="button">오늘</button></div>
-  <nav class="mob-tabs"><button type="button" data-mt="tt" class="on">시간표</button><button type="button" data-mt="ev">일정</button><button type="button" data-mt="att">출결</button><button type="button" data-mt="memo">메모</button></nav>
+  <nav class="mob-tabs"><button type="button" data-mt="tt" class="on">시간표</button><button type="button" data-mt="ev">일정</button><button type="button" data-mt="att">출결</button><button type="button" data-mt="chk" id="mtChk">오늘 확인</button><button type="button" data-mt="note" id="mtNote">아이 기록</button><button type="button" data-mt="memo">메모</button></nav>
   <main id="mobBody"></main>
   <footer class="mob-foot"><button class="b" id="mbSy" type="button">동기화 연결</button><button class="b" id="mbBig" type="button">큰 화면 보기</button></footer>
 </div>
@@ -2931,13 +2945,14 @@ $('repPrint').onclick = () => { document.body.classList.add('printing-rep'); win
 window.addEventListener('afterprint', () => document.body.classList.remove('printing-rep'));
 
 /* ===== 휴대폰 입력 화면 (시간표 · 일정 · 출결 · 메모) ===== */
-let mbD = offDay(0), mbTab = 'tt', mbCat = 's';
+let mbD = offDay(0), mbTab = 'tt', mbCat = 's', mbKid = 1;
 function mbKey(){ return dkey(mbD); }
 function renderMob(){
   if (!MOB) return;
   const k = mbKey(), wd = mbD.getDay(), rel = Math.round((mbD - offDay(0)) / 864e5);
   $('mbDate').innerHTML = `${mbD.getMonth() + 1}월 ${mbD.getDate()}일 ${DAYS[wd]}${rel ? ` <span class="rel">${relName(rel)}</span>` : ''}`;
   document.querySelectorAll('[data-mt]').forEach(b => b.classList.toggle('on', b.dataset.mt === mbTab));
+  $('mtChk').textContent = S.labels.check || '오늘 확인'; $('mtNote').textContent = S.labels.note || '아이 기록';
   let let_ = '';
   const R = sorted();
   if (mbTab === 'tt'){
@@ -2956,6 +2971,21 @@ function renderMob(){
     let_ = `<p class="mb-tip">번호를 누를 때마다 결석 → 지각 → 조퇴 → 출석으로 바뀌어요.</p>
       <div class="mb-kids">${R.map(({n, name}) => `<button type="button" class="mb-kid ${d[n] || ''}" data-matt="${n}"><b>${n}</b><span>${esc(name.trim()) || '&nbsp;'}</span><em>${d[n] ? ATT[d[n]] : '출석'}</em></button>`).join('')}</div>
       <p class="mb-sum">출석 ${R.filter(x => !d[x.n] || d[x.n] !== 'a').length} / ${R.length}명</p>`;
+  } else if (mbTab === 'chk'){
+    const hd = hwDay(k), its = (hd && hd.items) || [];
+    let_ = `<p class="mb-tip">확인할 것을 적고, 다 한 아이 번호를 눌러요. 다시 누르면 지워져요.</p>
+      <div class="mb-add"><input class="inp" id="mbChkIn" placeholder="확인할 것 (예: 받아쓰기 공책)"><button class="b go" id="mbChkAdd" type="button">추가</button></div>`
+      + (its.length ? its.map((it, j) => { const done = it.done.filter(n => R.some(x => x.n === n));
+        return `<div class="mb-chk"><div class="mb-chk-h"><input class="inp" data-cname="${it.id}" value="${esc(it.t)}" placeholder="확인 ${j + 1}"><b>${done.length}/${R.length}</b><button class="mini" type="button" data-crm="${it.id}">지우기</button></div>
+          <div class="mb-kids sm">${R.map(({n, name}) => `<button type="button" class="mb-kid ${done.includes(n) ? 'ok' : ''}" data-cdone="${it.id}:${n}"><b>${n}</b><span>${esc(name.trim()) || '&nbsp;'}</span></button>`).join('')}</div>
+          <div class="mb-chk-f"><button class="mini" type="button" data-call="${it.id}">모두 했어요</button><button class="mini" type="button" data-cnone="${it.id}">모두 지우기</button></div></div>`; }).join('')
+        : '<p class="mb-none">이 날 확인할 것이 없어요</p>');
+  } else if (mbTab === 'note'){
+    if (!R.some(x => x.n === mbKid)) mbKid = (R[0] || {}).n;
+    const list = (S.notes[mbKid] || []).slice().sort((a, b) => a.d < b.d ? 1 : -1);
+    let_ = `<div class="mb-kids sm mb-pick">${R.map(({n, name}) => `<button type="button" class="mb-kid ${n === mbKid ? 'on' : ''}" data-mkid="${n}"><b>${n}</b><span>${esc(name.trim()) || '&nbsp;'}</span>${(S.notes[n] || []).length ? `<i>${S.notes[n].length}</i>` : ''}</button>`).join('')}</div>
+      <div class="mb-add mb-note-add"><textarea class="inp" id="mbNoteIn" rows="2" placeholder="${mbKid}번${kidName(mbKid) ? ' ' + esc(kidName(mbKid)) : ''} 기록 적기 (위 날짜로 저장돼요)"></textarea><button class="b go" id="mbNoteAdd" type="button">기록</button></div>
+      <ul class="mb-list mb-notes">${list.length ? list.map(x => `<li><div class="mb-note-d"><input class="inp" type="date" data-ndate="${x.id}" value="${x.d}"><button class="mini" type="button" data-nrm="${x.id}">지우기</button></div><textarea class="inp" data-ntext="${x.id}" rows="2">${esc(x.t)}</textarea></li>`).join('') : '<li class="mb-none">아직 기록이 없어요</li>'}</ul>`;
   } else {
     let_ = `<textarea class="inp mb-memo" id="mbMemo" placeholder="교실 칠판 메모장에 함께 보여요">${esc(S.memo || '')}</textarea>`;
   }
@@ -2979,6 +3009,37 @@ function renderMob(){
   $('mobBody').querySelectorAll('[data-matt]').forEach(b => b.onclick = () => {
     const n = +b.dataset.matt; S.att[k] = Object.assign({}, S.att[k]); const nx = ATT_NEXT[S.att[k][n] || ''];
     if (nx) S.att[k][n] = nx; else delete S.att[k][n]; save(); renderMob();
+  });
+  // 오늘 확인
+  const hdx = () => { S.hw[k] = hwDay(k) || {items:[]}; return S.hw[k]; };
+  const itOf = id => hdx().items.find(x => x.id === id);
+  if ($('mbChkAdd')){
+    const add = () => { const t = $('mbChkIn').value.trim(); if (!t) return; hdx().items.push({id:uid36(), t, done:[]}); save(); renderMob(); };
+    $('mbChkAdd').onclick = add; $('mbChkIn').onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) add(); };
+  }
+  $('mobBody').querySelectorAll('[data-cname]').forEach(inp => inp.oninput = () => { const it = itOf(inp.dataset.cname); if (it){ it.t = inp.value; save(); } });
+  $('mobBody').querySelectorAll('[data-cdone]').forEach(b => b.onclick = () => {
+    const [id, n] = b.dataset.cdone.split(':'), it = itOf(id); if (!it) return;
+    it.done = it.done.includes(+n) ? it.done.filter(x => x !== +n) : it.done.concat(+n); save(); renderMob();
+  });
+  $('mobBody').querySelectorAll('[data-call]').forEach(b => b.onclick = () => { const it = itOf(b.dataset.call); if (it){ it.done = R.map(x => x.n); save(); renderMob(); } });
+  $('mobBody').querySelectorAll('[data-cnone]').forEach(b => b.onclick = () => { const it = itOf(b.dataset.cnone); if (it){ it.done = []; save(); renderMob(); } });
+  $('mobBody').querySelectorAll('[data-crm]').forEach(b => b.onclick = () => {
+    if (!b.dataset.ok){ b.dataset.ok = 1; b.textContent = '정말 지울까요?'; return; }
+    const d = hdx(); d.items = d.items.filter(x => x.id !== b.dataset.crm); if (!d.items.length) delete S.hw[k]; save(); renderMob();
+  });
+  // 아이 기록
+  $('mobBody').querySelectorAll('[data-mkid]').forEach(b => b.onclick = () => { mbKid = +b.dataset.mkid; renderMob(); });
+  if ($('mbNoteAdd')) $('mbNoteAdd').onclick = () => {
+    const t = $('mbNoteIn').value.trim(); if (!t || !mbKid) return;
+    (S.notes[mbKid] = S.notes[mbKid] || []).push({id:uid36(), d:k, t}); save(); renderMob();
+  };
+  const noteOf = id => (S.notes[mbKid] || []).find(x => x.id === id);
+  $('mobBody').querySelectorAll('[data-ntext]').forEach(inp => inp.oninput = () => { const x = noteOf(inp.dataset.ntext); if (x){ x.t = inp.value; save(); } });
+  $('mobBody').querySelectorAll('[data-ndate]').forEach(inp => inp.onchange = () => { const x = noteOf(inp.dataset.ndate); if (x && inp.value){ x.d = inp.value; save(); renderMob(); } });
+  $('mobBody').querySelectorAll('[data-nrm]').forEach(b => b.onclick = () => {
+    if (!b.dataset.ok){ b.dataset.ok = 1; b.textContent = '정말 지울까요?'; return; }
+    S.notes[mbKid] = (S.notes[mbKid] || []).filter(x => x.id !== b.dataset.nrm); if (!S.notes[mbKid].length) delete S.notes[mbKid]; save(); renderMob();
   });
   if ($('mbMemo')) $('mbMemo').oninput = e => { S.memo = e.target.value; save(); };
 }
