@@ -403,7 +403,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   border-radius:999px; padding:.4em 1.1em; font-size:clamp(13px,1vw,18px)}
 #focusEnd:hover{color:#aab7b1}
 
-@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+
 @media (max-width:900px){
   html,body{height:auto}
   .board{grid-template-columns:1fr; grid-template-rows:none}
@@ -510,16 +510,28 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .c-praise .kid b{font-size:1.2em}
 .ps .pnm{font-size:1em; color:var(--ink); font-weight:600}
 .ps .cnt{font-size:.85em}
-@media (max-height:900px){
-  .c-praise .kid{flex-direction:row; flex-wrap:wrap; align-content:center; column-gap:.25em; row-gap:0; padding:.1em}
-  .c-praise .kid b{font-size:1em; line-height:1.15} .c-praise .kid .pnm{max-width:none; flex:none}
-  .c-praise .kid .cnt{flex-basis:100%; text-align:center; line-height:1.15}
-}
+
 /* 급식: 한눈에 */
 .c-meal .body{justify-content:stretch}
 .c-meal .menu:not(.empty){flex:1; min-height:0; width:100%; display:flex; flex-wrap:wrap; align-content:center; justify-content:center; gap:.35em .4em; overflow:hidden; line-height:1.2}
 .c-meal .menu .mi{padding:.18em .6em; border-radius:999px; white-space:nowrap; background:#fff3ef; color:var(--ink)}
 .c-meal .menu .m1{background:#fff8dc} .c-meal .menu .m2{background:#e8f6f0} .c-meal .menu .m3{background:#eaf3fd}
+/* 칭찬 별: 번호와 이름 한 줄, 아래에 별 */
+.c-praise .kids{grid-template-columns:repeat(var(--cols,5),minmax(0,1fr))}
+.c-praise .kid{font-size:max(12px,min(3.4cqw,6.4cqh)); gap:.1em; padding:.2em .3em}
+.c-praise .kid .pl{display:flex; align-items:baseline; justify-content:center; gap:.3em; max-width:100%; white-space:nowrap; overflow:hidden}
+.c-praise .kid .pl b{font-size:1.15em; line-height:1.1; flex:none}
+.c-praise .kid .pl .pnm{font-size:1em; color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; min-width:0}
+.c-praise .kid .cnt{font-size:.9em; line-height:1.1}
+@container (max-width:360px){ .c-praise .kid .pl .pnm{display:none} }
+/* 1인 1역: 이름(담당)은 오른쪽 정렬 */
+.clean-row{align-items:baseline}
+.clean-row span{margin-left:auto; text-align:right}
+.clean-row b{white-space:nowrap; flex:none}
+.c-praise .kid .pl b{color:var(--teal)}
+.clean-row .cw{font-style:normal; white-space:nowrap}
+.c-clean .clean-row{font-size:max(12px,min(3.4cqw,6.6cqh)); padding:1.1cqh .2em}
+.c-praise .kid{font-size:max(12px,min(3.6cqw,7.6cqh))}
 </style>
 </head>
 <body>
@@ -1252,7 +1264,7 @@ const OLD_CLEAN = '교실 바닥|칠판·교탁|사물함|복도|창틀|분리�
 if (S.cleaning.map(r => r.a).join('|') === OLD_CLEAN) S.cleaning = fresh().cleaning;
 function renderClean(){
   $('cleanView').innerHTML = S.cleaning.length
-    ? S.cleaning.map(r => `<div class="clean-row"><b>${esc(r.a)}</b><span>${esc(r.w)}</span></div>`).join('')
+    ? S.cleaning.map(r => `<div class="clean-row"><b>${esc(r.a)}</b><span>${r.w.split(/\s*,\s*/).map(x => `<i class="cw">${esc(x)}</i>`).join(', ')}</span></div>`).join('')
     : '<div class="muted">편집을 눌러 역할을 넣어 주세요</div>';
 }
 function renderCleanEdit(){
@@ -1539,9 +1551,10 @@ let prMinus = false;
 const MY_GOAL = 20, CLASS_GOAL = 100;
 function renderPraise(pop){
   const R = sorted();
+  $('prKids').style.setProperty('--cols', Math.max(4, Math.ceil(R.length / 3)));
   $('prKids').innerHTML = R.map(({n, name}) => {
     const c = S.praise[n] || 0, win = c >= MY_GOAL;
-    return `<button class="kid ps${win ? ' win' : ''}${pop === n ? ' pop' : ''}" style="--p:${Math.min(100, c / MY_GOAL * 100)}%" type="button" data-pr="${n}" aria-label="${n}번 ${esc(name.trim())} 별 ${c}개"><b>${n}</b><span class="pnm">${name.trim() ? esc(name.trim()) : '&nbsp;'}</span><span class="cnt">★ ${c}</span></button>`;
+    return `<button class="kid ps${win ? ' win' : ''}${pop === n ? ' pop' : ''}" style="--p:${Math.min(100, c / MY_GOAL * 100)}%" type="button" data-pr="${n}" aria-label="${n}번 ${esc(name.trim())} 별 ${c}개"><span class="pl"><b>${n}</b>${name.trim() ? `<span class="pnm">${esc(name.trim())}</span>` : ''}</span><span class="cnt">★ ${c}</span></button>`;
   }).join('');
   $('prKids').querySelectorAll('[data-pr]').forEach(b => b.onclick = () => {
     const n = +b.dataset.pr, before = S.praise[n] || 0, totalBefore = R.reduce((t, x) => t + (S.praise[x.n] || 0), 0);
@@ -1549,10 +1562,10 @@ function renderPraise(pop){
     if (!prMinus){
       if (totalBefore + 1 === CLASS_GOAL) fanfare();
       else if (S.praise[n] === MY_GOAL){ fanfare(); setTimeout(() => { const el = $('prKids').querySelector(`[data-pr="${n}"]`); if (el) confetti(el, 70); }, 30); }
-      else chime([1175], 0, .25, .03);
+      else starPop();
     }
     save(); renderPraise(n);
-    if (!prMinus && S.praise[n] !== MY_GOAL && totalBefore + 1 !== CLASS_GOAL){ const el = $('prKids').querySelector(`[data-pr="${n}"]`); if (el) confetti(el, 36); }
+    if (!prMinus && S.praise[n] !== MY_GOAL && totalBefore + 1 !== CLASS_GOAL){ const el = $('prKids').querySelector(`[data-pr="${n}"]`); if (el) confetti(el, 60); }
   });
   const total = R.reduce((t, x) => t + (S.praise[x.n] || 0), 0), wins = R.filter(x => (S.praise[x.n] || 0) >= MY_GOAL).length;
   $('prSum').innerHTML = `<span>우리 반 <b style="color:#c27c00">★ ${total}</b> / ${CLASS_GOAL}</span><span class="bar"><i style="width:${Math.min(100, total / CLASS_GOAL * 100)}%"></i></span><span>${total >= CLASS_GOAL ? '학급 목표 달성!' : `개인 목표 ${MY_GOAL}개 · 달성 ${wins}명`}</span>`;
@@ -1574,7 +1587,6 @@ $('prReset').onclick = () => {
 /* ===== 효과: 종이 꽃가루 ===== */
 const FX = {parts:[], run:false};
 function confetti(el, count = 90){
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const c = $('fx'), r = el.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   c.width = innerWidth * dpr; c.height = innerHeight * dpr;
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -1614,7 +1626,6 @@ $('pkGo').onclick = () => {
     S.pickUsed = (S.pickUsed || []).filter(n => n !== pick).concat(pick); save(); renderPick();
     fanfare(); confetti(num); btn.disabled = false;
   };
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return done();
   num.classList.add('roll');
   let i = 0; const steps = 22;
   const spin = () => {
@@ -1725,7 +1736,7 @@ function runLadder(i, quick){
     const bot = $('ldBoard').querySelector(`[data-bot="${end}"]`);
     if (bot){ bot.classList.add('land'); if (!quick){ confetti(bot, 60); fanfare(); } }
   };
-  if (quick || matchMedia('(prefers-reduced-motion: reduce)').matches) return finish();
+  if (quick) return finish();
   ldBusy = true;
   const wrap = $('ldSvg'), svg = wrap.querySelector('svg');
   const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
@@ -2450,6 +2461,20 @@ function fitMeal(){
 if (window.ResizeObserver) new ResizeObserver(() => fitMeal()).observe($('menuView'));
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMeal);
 fitMeal();
+/* 별 받을 때 '퐁! 반짝' 소리 */
+function starPop(){
+  if (!cfg().sfx) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume();
+    const t = actx.currentTime;
+    const len = .12, buf = actx.createBuffer(1, Math.floor(actx.sampleRate * len), actx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const src = actx.createBufferSource(), bp = actx.createBiquadFilter(), g = actx.createGain();
+    src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = .8; g.gain.value = .35;
+    src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start(t);
+  }catch(e){}
+  chime([1319, 1760, 2349], .07, .35, .05, 'sine');
+}
 </script>
 </body>
 </html>
