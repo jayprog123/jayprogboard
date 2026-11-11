@@ -640,7 +640,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 }
 /* ===== 휴대폰 입력 화면 ===== */
 body.mobile{overflow:auto; height:auto; min-height:100vh; background:#f3f7f5}
-body.mobile > *:not(#mob):not(#syDlg):not(#vBubble):not(script):not(style){display:none!important}
+body.mobile > *:not(#mob):not(#syDlg):not(#nbDlg):not(#vBubble):not(script):not(style){display:none!important}
 #mob{display:flex; flex-direction:column; min-height:100vh; font-size:16px; color:var(--ink); padding-bottom:84px}
 .mob-top{position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:.5em; padding:12px 16px; background:#fff; border-bottom:1px solid var(--line); font-family:var(--display); font-size:1.2em}
 #mobSync{font-family:var(--body); font-size:.7em; padding:.2em .7em; border-radius:999px}
@@ -695,11 +695,63 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
 #verTag a{color:inherit; text-decoration:none} #verTag a:hover{text-decoration:underline}
 .mob-top small{font-family:var(--body); font-size:.6em; color:var(--ink-3)}
 .cfg-about p{color:var(--ink-2)} .cfg-about a{color:#0f7d61}
+
+.cfg-goal{display:flex; flex-wrap:wrap; gap:.6em 1.6em; align-items:center}
+.cfg-goal .inp{width:5.5em; text-align:center}
+#cfgMicSec{width:auto; margin-left:.5em}
+/* 업무 공개·비공개 딱지 */
+.pubt{border:1px solid var(--line); background:#eef1f0; color:var(--ink-3); border-radius:999px; padding:.1em .7em; font-size:.85em; cursor:pointer; flex:none; white-space:nowrap}
+.pubt.on{background:#fff3c4; color:#7a5a00; border-color:#f0d36a}
+/* ===== 교무수첩 ===== */
+.nb-btn{background:#fff8dc; border-color:#f0d36a}
+#nbDlg{position:fixed; inset:0; z-index:47; background:rgba(28,43,37,.45); display:flex; align-items:center; justify-content:center; padding:16px}
+.nb-dlg{height:92vh; width:min(1180px,96vw)}
+.nb-tools{flex-wrap:wrap; gap:.5em}
+.nb-nav{display:flex; align-items:center; gap:.4em} .nb-nav b{font-family:var(--display); font-weight:400; min-width:9.5em; text-align:center}
+.nb-jump{width:auto; padding:.2em .5em; font-size:.85em}
+.nb-lock{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.8em; text-align:center; font-size:18px}
+.nb-lock[hidden],.nb-box[hidden]{display:none}
+.nb-lock h3{margin:0; font-family:var(--display); font-weight:400; font-size:1.5em}
+.nb-lock p{margin:0; color:var(--ink-2); max-width:30em; line-height:1.5}
+.nb-lock .inp{width:min(16em,80vw); text-align:center; font-size:1.1em}
+.nb-lock .err{color:#d33b2f; min-height:1.4em}
+.nb-lock .link{background:none; border:none; color:var(--ink-3); text-decoration:underline; cursor:pointer; font-size:.85em}
+.nb-box{flex:1; min-height:0; overflow:auto; display:grid; grid-template-columns:1fr 1fr; gap:14px; align-content:start; font-size:16px; padding:2px}
+.nb-sec{background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.nb-sec h4{margin:0; font-family:var(--display); font-weight:400; font-size:1.15em; display:flex; align-items:center; gap:.5em}
+.nb-sec h4 small{font-family:var(--body); color:var(--ink-3); font-size:.7em}
+.nb-sec textarea{min-height:9.5em; resize:vertical; line-height:1.55; font-size:1em; width:100%; box-sizing:border-box}
+.nb-add{display:flex; gap:6px} .nb-add .inp{flex:1; min-width:0} .nb-add select.inp{flex:none; width:auto}
+.nb-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+.nb-list li{display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:10px; background:#f6f8f7}
+.nb-list li .inp{flex:1; min-width:0; background:transparent; border-color:transparent; padding:.2em .4em}
+.nb-list li .inp:focus{background:#fff; border-color:var(--line)}
+.nb-list li.done .inp{text-decoration:line-through; color:var(--ink-3)}
+.nb-list input[type=checkbox]{width:1.2em; height:1.2em; flex:none}
+.nb-list .who{flex:none; font-family:var(--display); color:#0f7d61; white-space:nowrap}
+.nb-list .d{flex:none; color:var(--ink-3); font-size:.85em; white-space:nowrap}
+.nb-none{color:var(--ink-3); font-size:.9em}
+.nb-soon{border-top:1px dashed var(--line); padding-top:8px}
+.nb-soon b{font-weight:400; font-family:var(--display); font-size:.95em; color:var(--ink-2)}
+.nb-days{grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:6px; align-items:center; color:var(--ink-3); font-size:.9em}
+.nb-days button{border:1px solid var(--line); background:#fff; border-radius:999px; padding:.15em .8em; cursor:pointer; color:var(--ink-2)}
+.nb-days button.on{background:var(--ink); color:#fff; border-color:var(--ink)}
+@media (max-width:760px){
+  #nbDlg{padding:0} .nb-dlg{width:100vw; height:100dvh; border-radius:0}
+  .nb-box{grid-template-columns:1fr} .nb-nav b{min-width:0} .nb-jump{display:none}
+}
+.nb-nav .rel{font-size:.7em; background:var(--lemon); border-radius:999px; padding:.05em .55em; vertical-align:.1em}
+.mob-top .mini{font-family:var(--body); font-size:.7em; background:#fff8dc; border-color:#f0d36a}
+.nb-dlg .b{font-size:1em; padding:.45em 1.1em; border-radius:12px; flex:none}
+.nb-add{align-items:center}
+.nb-lock .b{font-size:1.05em; padding:.5em 2em}
+#evList li{flex-wrap:wrap}
+#evList li > span{flex:1 1 6em; min-width:0}
 </style>
 </head>
 <body>
 <div id="mob" hidden>
-  <header class="mob-top"><b>개굴칠판 <small>입력</small></b><span class="sp"></span><span id="mobSync"></span></header>
+  <header class="mob-top"><b>개굴칠판 <small>입력</small></b><span class="sp"></span><span id="mobSync"></span><button class="mini" id="mbNb" type="button">교무수첩</button></header>
   <div class="mob-date"><button class="mini" id="mbPrev" type="button" aria-label="전 날">◀</button><b id="mbDate"></b><button class="mini" id="mbNext" type="button" aria-label="다음 날">▶</button><button class="mini" id="mbToday" type="button">오늘</button></div>
   <nav class="mob-tabs"><button type="button" data-mt="tt" class="on">시간표</button><button type="button" data-mt="ev">일정</button><button type="button" data-mt="att">출결</button><button type="button" data-mt="chk" id="mtChk">오늘 확인</button><button type="button" data-mt="note" id="mtNote">아이 기록</button><button type="button" data-mt="memo">메모</button></nav>
   <main id="mobBody"></main>
@@ -743,6 +795,7 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
   </div>
   <button class="voice-btn" id="voiceBtn" type="button" aria-pressed="false"><i></i><span id="voiceTxt">음성 켜기</span></button>
   <span id="saveState">불러오는 중</span>
+  <button class="res-btn nb-btn" id="nbBtn" type="button" aria-haspopup="dialog">교무수첩</button>
   <button class="res-btn chalk-btn" id="chalkBtn" type="button">칠판</button>
   <button class="focus-btn" id="focusBtn" type="button">집중 모드</button>
 </header>
@@ -780,6 +833,7 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
             <button class="cat s" type="button" data-cat="s" aria-pressed="true">학교</button>
             <button class="cat w" type="button" data-cat="w" aria-pressed="false">업무</button>
             <button class="cat k" type="button" data-cat="k" aria-pressed="false">주간</button>
+            <button class="pubt" type="button" id="evPub" hidden title="공개: 작은 달력에도 보여요 / 비공개: 크게 열어야 보여요">비공개</button>
           </div>
           <div class="ev-row"><input class="inp" id="evIn" placeholder="일정 적기" aria-label="일정"><button class="b go" id="evAdd" type="button">추가</button></div>
           <span id="evWhen" hidden></span><button class="polish" id="evPolish" type="button" hidden>다듬기</button>
@@ -931,8 +985,18 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
   <div class="sheet-dlg rep-dlg" role="dialog" aria-modal="true" aria-labelledby="repTitle">
     <div class="roster-head rep-tools"><span id="repTitle">주간 기록</span>
       <button class="mini" id="repPrev" type="button" aria-label="지난주">◀</button><b id="repRange"></b><button class="mini" id="repNext" type="button" aria-label="다음 주">▶</button><button class="mini" id="repThis" type="button">이번 주</button>
-      <span class="sp"></span><button class="mini go" id="repPrint" type="button">인쇄 · PDF로 저장</button><button class="mini" id="repClose" type="button">닫기</button></div>
+      <span class="sp"></span><button class="mini" id="repXlsx" type="button">엑셀로 저장</button><button class="mini go" id="repPrint" type="button">인쇄 · PDF로 저장</button><button class="mini" id="repClose" type="button">닫기</button></div>
     <div id="repBox" class="rep-box"></div>
+  </div>
+</div>
+<div id="nbDlg" class="dlg-wrap" hidden>
+  <div class="sheet-dlg nb-dlg" role="dialog" aria-modal="true" aria-labelledby="nbTitle">
+    <div class="roster-head nb-tools"><span id="nbTitle">교무수첩</span>
+      <span class="nb-nav" id="nbNav" hidden><button class="mini" id="nbPrev" type="button" aria-label="전 날">◀</button><b id="nbDate"></b><button class="mini" id="nbNext" type="button" aria-label="다음 날">▶</button><button class="mini" id="nbToday" type="button">오늘</button><input class="inp nb-jump" id="nbJump" type="date" aria-label="날짜로 가기"></span>
+      <span class="sp"></span>
+      <button class="mini" id="nbXlsx" type="button" hidden>엑셀로 저장</button><button class="mini" id="nbPwBtn" type="button" hidden>비밀번호 바꾸기</button><button class="mini" id="nbClose" type="button">잠그고 닫기</button></div>
+    <div id="nbLock" class="nb-lock"></div>
+    <div id="nbBox" class="nb-box" hidden></div>
   </div>
 </div>
 <div id="sheetDlg" class="dlg-wrap" hidden>
@@ -944,7 +1008,7 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
 
 <canvas id="fx" aria-hidden="true"></canvas>
 <div id="vBubble" role="status" aria-live="polite" hidden></div>
-<div id="verTag">개굴칠판 · 11월 9일 판 · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.ko" target="_blank" rel="noopener license" title="출처를 밝히면 비영리로 자유롭게 쓸 수 있어요 (CC BY-NC 4.0)">© 2026 정예훈(개굴정)</a></div>
+<div id="verTag">개굴칠판 · 11월 11일 판 · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.ko" target="_blank" rel="noopener license" title="출처를 밝히면 비영리로 자유롭게 쓸 수 있어요 (CC BY-NC 4.0)">© 2026 정예훈(개굴정)</a></div>
 
 <div id="bkDlg" hidden>
   <div class="roster bk" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
@@ -966,6 +1030,13 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
       <p>강조할 낱말은 *별표*로 감싸요. 예) 함께 *어울려* 매일 즐겁게 *자라는* 우리반</p>
       <b>부제목</b>
       <input class="inp" id="cfgSub" aria-label="부제목"></div>
+    <div class="bk-step"><b>칭찬 별 목표</b>
+      <div class="cfg-goal"><label>개인 목표 <input class="inp" id="cfgGoalMy" type="number" min="1" max="999" inputmode="numeric"> 개</label>
+      <label>학급 목표 <input class="inp" id="cfgGoalCls" type="number" min="1" max="9999" inputmode="numeric"> 개</label></div>
+      <p>목표를 바꿔도 지금까지 모은 별은 그대로예요. 다른 컴퓨터와 휴대폰에도 같이 바뀌어요.</p></div>
+    <div class="bk-step"><b>마이크</b>
+      <label class="cfg-row">마이크 새로 켜기 <select class="inp" id="cfgMicSec"><option value="0">하지 않기</option><option value="20">20초마다</option><option value="30">30초마다</option><option value="60">1분마다</option></select></label>
+      <p>정해 둔 시간마다 마이크를 잠깐 껐다 켜서 음성 인식을 새로 시작해요. 말하는 중에는 끊지 않고, 말이 끝나면 새로 켜요.</p></div>
     <div class="bk-step"><b>소리</b>
       <label class="cfg-row"><input type="checkbox" id="cfgSfx"> 효과음 (부를 때 띵, 뽑기·별 소리)</label>
       <label class="cfg-row"><input type="checkbox" id="cfgSpeak"> 정개굴이 말소리로 대답하기</label>
@@ -1259,7 +1330,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!$('foc
 let calY = new Date().getFullYear(), calM = new Date().getMonth(), selDate = dkey(), evCat = 's';
 const calBig = () => $('cCal').classList.contains('big');
 const evs = k => (S.events[k] || []).map(x => Object.assign({c:'s'}, x));
-const visible = k => evs(k).filter(x => x.c === 's' || calBig());
+const visible = k => evs(k).filter(x => x.c === 's' || x.pub || calBig());
 // 주간 일정: 그 주(일~토)의 일요일 날짜로 묶어 저장하고, 주 전체에 띠로 보여 줌
 const weekKey = k => { const d = new Date(k + 'T00:00'); d.setDate(d.getDate() - d.getDay()); return dkey(d); };
 const weekRange = k => { const a = new Date(weekKey(k) + 'T00:00'), b = new Date(a); b.setDate(a.getDate() + 6); return `${a.getMonth()+1}/${a.getDate()}~${b.getMonth()+1}/${b.getDate()}`; };
@@ -1292,8 +1363,9 @@ function renderCal(){
   $('evWhen').textContent = `${sd.getMonth()+1}월 ${sd.getDate()}일에`;
   const list = wks(selDate).map(x => Object.assign({c:'k'}, x)).concat(visible(selDate));
   const LBL = {s:'학교', w:'업무', k:'주간'};
-  $('evList').innerHTML = list.length ? list.map(x => `<li data-li="${esc(x.id)}"><em class="${x.c}">${LBL[x.c]}</em><span>${esc(x.t)}${x.c === 'k' ? ` <small class="muted">(${weekRange(selDate)})</small>` : ''}</span><button type="button" data-ed="${esc(x.id)}" data-c="${x.c}">고치기</button><button type="button" data-rm="${esc(x.id)}" data-c="${x.c}" aria-label="지우기">✕</button></li>`).join('')
+  $('evList').innerHTML = list.length ? list.map(x => `<li data-li="${esc(x.id)}"><em class="${x.c}">${LBL[x.c]}</em><span>${esc(x.t)}${x.c === 'k' ? ` <small class="muted">(${weekRange(selDate)})</small>` : ''}</span>${x.c === 'w' ? `<button type="button" class="pubt ${x.pub ? 'on' : ''}" data-pub="${esc(x.id)}" title="누르면 바뀌어요">${x.pub ? '공개' : '비공개'}</button>` : ''}<button type="button" data-ed="${esc(x.id)}" data-c="${x.c}">고치기</button><button type="button" data-rm="${esc(x.id)}" data-c="${x.c}" aria-label="지우기">✕</button></li>`).join('')
     : '<li class="muted">일정이 없어요</li>';
+  $('evList').querySelectorAll('[data-pub]').forEach(b => b.onclick = () => { const it = (S.events[selDate] || []).find(x => x.id === b.dataset.pub); if (!it) return; if (it.pub) delete it.pub; else it.pub = 1; save(); renderCal(); });
   $('evList').querySelectorAll('[data-ed]').forEach(b => b.onclick = () => {
     const id = b.dataset.ed, c = b.dataset.c, li = b.closest('li');
     const arr = c === 'k' ? ((S.weekly || {})[weekKey(selDate)] || []) : (S.events[selDate] || []), item = arr.find(x => x.id === id); if (!item) return;
@@ -1314,11 +1386,12 @@ function renderCal(){
     }
     save(); renderCal(); renderTodayEv();
   });
-  const hidden = calBig() ? 0 : evs(selDate).filter(x => x.c === 'w').length;
+  const hidden = calBig() ? 0 : evs(selDate).filter(x => x.c === 'w' && !x.pub).length;
   const hints = [];
   if (evCat === 'k') hints.push(`주간 일정은 ${weekRange(selDate)} 한 주 내내 보여요.`);
-  if (hidden) hints.push(`업무 일정 ${hidden}개는 '크게'를 눌러야 보여요.`);
-  else if (evCat === 'w' && !calBig()) hints.push(`업무 일정은 '크게'를 눌러야 보여요.`);
+  if (hidden) hints.push(`비공개 업무 ${hidden}개는 '크게'를 눌러야 보여요.`);
+  else if (evCat === 'w' && !evPub && !calBig()) hints.push(`비공개 업무는 '크게'를 눌러야 보여요.`);
+  $('evPub').hidden = evCat !== 'w'; $('evPub').textContent = evPub ? '공개' : '비공개'; $('evPub').classList.toggle('on', evPub);
   $('evHint').hidden = !hints.length; $('evHint').textContent = hints.join(' ');
   $('evIn').placeholder = evCat === 'k' ? '주간 일정 적기' : evCat === 'w' ? '업무 적기' : '일정 적기';
 }
@@ -1326,10 +1399,11 @@ function renderTodayEv(){
   const vk = dkey(viewDay()), memoTo = ((S.plan[vk] || {})['전달'] || '').trim();
   $('todayEv').innerHTML = wks(vk).map(x => `<span class="k">${esc(x.t)}</span>`).join('') + evs(vk).filter(x => x.c === 's').map(x => `<span>${esc(x.t)}</span>`).join('') + (memoTo ? `<span class="to">전달: ${esc(memoTo)}</span>` : '');
 }
+var evPub = false;
 function addEvent(){
   const t = $('evIn').value.trim(); if (!t) return;
   if (evCat === 'k'){ S.weekly = S.weekly || {}; (S.weekly[weekKey(selDate)] = S.weekly[weekKey(selDate)] || []).push({id: uid36(), t}); }
-  else (S.events[selDate] = S.events[selDate] || []).push({id: uid36(), t, c: evCat});
+  else (S.events[selDate] = S.events[selDate] || []).push(Object.assign({id: uid36(), t, c: evCat}, evCat === 'w' && evPub ? {pub:1} : {}));
   $('evIn').value = ''; save(); renderCal(); renderTodayEv(); $('evIn').focus();
 }
 document.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
@@ -1761,8 +1835,10 @@ $('focusEnd').onclick = () => setFocus(false);
 
 /* ===== 칭찬 별 모으기: 개인 목표 20개, 학급 목표 100개 ===== */
 let prMinus = false;
-const MY_GOAL = 20, CLASS_GOAL = 100;
+let MY_GOAL = 20, CLASS_GOAL = 100;
+function syncGoals(){ const g = S.goals || {}; MY_GOAL = Math.max(1, +g.my || 20); CLASS_GOAL = Math.max(1, +g.cls || 100); }
 function renderPraise(pop){
+  syncGoals();
   const R = sorted();
   $('prKids').style.setProperty('--cols', Math.max(4, Math.ceil(R.length / 3)));
   $('prKids').innerHTML = R.map(({n, name}) => {
@@ -2269,7 +2345,7 @@ function heard(text){
   const tt = tidy(t);
   if (/(타이머|달력|일정|급식|식단|메모|사다리|뽑기|발표|별|칭찬|출결|체크|확인|숙제|1인\s*1역|일인\s*일역|역할|당번|시계|시간표|시정|날씨)\s*(을|를)?\s*(크게|키워|확대|전체\s*화면)/.test(tt) || /^(작게|원래대로|화면\s*작게)/.test(tt) || (!$('focus').hidden && /집중/.test(tt) && /(끝|꺼|그만|해제|풀|나가|종료|닫)/.test(tt))) runCommand(tt);
 }
-let recStarted = 0, rapid = 0, lastErr = '', recRunning = false, lastEnd = 0, lastAct = 0;
+let recStarted = 0, rapid = 0, lastErr = '', recRunning = false, lastEnd = 0, lastAct = 0, lastTalk = 0, micResets = 0;
 function vlog(){}
 function kickVoice(){ if (!listening || !rec || recRunning) return; try{ rec.start(); }catch(err){} }
 function startVoice(){
@@ -2277,11 +2353,12 @@ function startVoice(){
   if (listening) return;
   listening = true; lastErr = ''; rapid = 0; setVoiceUI();
   if (!rec){
-    rec = new SR(); rec.lang = 'ko-KR'; rec.continuous = true; rec.interimResults = false; rec.maxAlternatives = 3;
+    rec = new SR(); rec.lang = 'ko-KR'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3;
     rec.onstart = () => { recRunning = true; recStarted = lastAct = Date.now(); };
-    rec.onaudiostart = rec.onsoundstart = rec.onspeechstart = () => { lastAct = Date.now(); };
+    rec.onaudiostart = () => { lastAct = Date.now(); };
+    rec.onsoundstart = rec.onspeechstart = () => { lastAct = lastTalk = Date.now(); };
     rec.onresult = e => {
-      rapid = 0; lastAct = Date.now();
+      rapid = 0; lastAct = lastTalk = Date.now();
       for (let i = e.resultIndex; i < e.results.length; i++){
         const r = e.results[i]; if (!r.isFinal) continue;
         // 여러 후보 가운데 '정개굴'이 들어간 것을 먼저 씀
@@ -2309,8 +2386,13 @@ function startVoice(){
 setInterval(() => {
   if (!listening || !rec) return;
   if (!recRunning && Date.now() - lastEnd > 2500) kickVoice();
-  else if (recRunning && Date.now() - lastAct > 45000){ lastAct = Date.now(); try{ rec.abort(); }catch(err){} }
-}, 3000);
+  else if (recRunning){
+    const sec = +cfg().micSec || 0, now = Date.now(), run = now - recStarted, quiet = now - lastTalk;
+    // 정해 둔 시간이 지나면 새로 켬: 말하는 중이면 말이 끝날 때까지(길어도 15초 더) 기다림. stop()이라 하던 말은 끝까지 알아들음
+    if (sec && run > sec * 1000 && (quiet > 1500 || run > sec * 1000 + 15000)){ micResets++; lastAct = now; try{ rec.stop(); }catch(err){} }
+    else if (now - lastAct > 45000){ lastAct = now; try{ rec.abort(); }catch(err){} }
+  }
+}, 1000);
 function stopVoice(){
   listening = false; awake = false;
   if (rec){ try{ rec.stop(); }catch(err){} }
@@ -2330,7 +2412,7 @@ $('mgPop').addEventListener('click', () => setMg(false));
 document.addEventListener('click', e => { if (!e.target.closest('.mg')) setMg(false); });
 
 /* ===== 설정 ===== */
-function cfg(){ return Object.assign({title:'함께 *어울려* 매일 즐겁게 *자라는* 우리반', sub:'2026. 용원초 2학년 2반', speak:false, sfx:true, school:'용원초등학교', neisKey:''}, S.cfg || {}); }
+function cfg(){ return Object.assign({title:'함께 *어울려* 매일 즐겁게 *자라는* 우리반', sub:'2026. 용원초 2학년 2반', speak:false, sfx:true, school:'용원초등학교', neisKey:'', micSec:30}, S.cfg || {}); }
 function renderTitle(){
   const c = cfg();
   $('mainTitle').innerHTML = esc(c.title).replace(/\*(.+?)\*/g, '<em>$1</em>');
@@ -2340,7 +2422,7 @@ function renderTitle(){
 function setCfg(k, v){ S.cfg = Object.assign({}, S.cfg || {}, {[k]: v}); save(); }
 function openCfg(open){
   $('cfgDlg').hidden = !open;
-  if (open){ const c = cfg(); $('cfgMain').value = c.title; $('cfgSub').value = c.sub; $('cfgSfx').checked = c.sfx; $('cfgSpeak').checked = c.speak; $('cfgSchool').value = c.school; $('cfgNeis').value = c.neisKey; $('cfgClose').focus(); }
+  if (open){ const c = cfg(); $('cfgMain').value = c.title; $('cfgSub').value = c.sub; $('cfgSfx').checked = c.sfx; $('cfgSpeak').checked = c.speak; $('cfgSchool').value = c.school; $('cfgNeis').value = c.neisKey; syncGoals(); $('cfgGoalMy').value = MY_GOAL; $('cfgGoalCls').value = CLASS_GOAL; $('cfgMicSec').value = String(c.micSec); $('cfgClose').focus(); }
 }
 $('cfgBtn').onclick = () => openCfg(true);
 $('cfgClose').onclick = () => openCfg(false);
@@ -2965,7 +3047,7 @@ function renderMob(){
     const lab = {s:'학교', w:'업무', k:'주간'};
     let_ = `<div class="mb-cats">${['s', 'w', 'k'].map(c => `<button type="button" class="mini ${mbCat === c ? 'on' : ''}" data-mcat="${c}">${lab[c]}</button>`).join('')}</div>
       <div class="mb-add"><input class="inp" id="mbEvIn" placeholder="${mbCat === 'k' ? '이 주 내내 보일 일정' : mbCat === 'w' ? '업무 적기' : '일정 적기'}"><button class="b go" id="mbEvAdd" type="button">추가</button></div>
-      <ul class="mb-list">${items.length ? items.map(({x, c}) => `<li><span class="mb-tag ${c}">${lab[c]}</span><span class="t">${esc(x.t)}</span><button class="mini" type="button" data-mrm="${c}:${x.id}">지우기</button></li>`).join('') : '<li class="mb-none">일정이 없어요</li>'}</ul>`;
+      <ul class="mb-list">${items.length ? items.map(({x, c}) => `<li><span class="mb-tag ${c}">${lab[c]}</span><span class="t">${esc(x.t)}</span>${c === 'w' ? `<button type="button" class="pubt ${x.pub ? 'on' : ''}" data-mpub="${x.id}">${x.pub ? '공개' : '비공개'}</button>` : ''}<button class="mini" type="button" data-mrm="${c}:${x.id}">지우기</button></li>`).join('') : '<li class="mb-none">일정이 없어요</li>'}</ul>`;
   } else if (mbTab === 'att'){
     const d = S.att[k] || {};
     let_ = `<p class="mb-tip">번호를 누를 때마다 결석 → 지각 → 조퇴 → 출석으로 바뀌어요.</p>
@@ -2999,6 +3081,7 @@ function renderMob(){
       save(); renderMob(); };
     $('mbEvAdd').onclick = add; $('mbEvIn').onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) add(); };
   }
+  $('mobBody').querySelectorAll('[data-mpub]').forEach(b => b.onclick = () => { const x = (S.events[k] || []).find(y => y.id === b.dataset.mpub); if (!x) return; if (x.pub) delete x.pub; else x.pub = 1; save(); renderMob(); });
   $('mobBody').querySelectorAll('[data-mrm]').forEach(b => b.onclick = () => {
     if (!b.dataset.ok){ b.dataset.ok = 1; b.textContent = '정말 지울까요?'; return; }
     const [c, id] = b.dataset.mrm.split(':');
@@ -3063,6 +3146,215 @@ if (MOB){
   renderMob(); mobSync(); setInterval(mobSync, 5000);
 }
 $('mobBtn').onclick = () => { location.href = location.pathname + '?m'; };
+
+/* 설정: 별 목표, 마이크 새로 켜기 */
+function setGoal(k, v, lo, hi){ const n = Math.round(+v); if (!(n >= lo && n <= hi)) return; S.goals = Object.assign({}, S.goals, {[k]: n}); save(); renderPraise(); }
+$('cfgGoalMy').onchange = e => { setGoal('my', e.target.value, 1, 999); syncGoals(); e.target.value = MY_GOAL; };
+$('cfgGoalCls').onchange = e => { setGoal('cls', e.target.value, 1, 9999); syncGoals(); e.target.value = CLASS_GOAL; };
+$('cfgMicSec').onchange = e => setCfg('micSec', +e.target.value);
+/* ===== 달력: 업무 적을 때 공개·비공개 고르기 ===== */
+$('evPub').onclick = () => { evPub = !evPub; renderCal(); };
+
+/* ===== 엑셀(.xlsx) 파일 만들기: 외부 도구 없이 직접 씀 ===== */
+const XL = (() => {
+  const enc = new TextEncoder(), T = new Uint32Array(256);
+  for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; T[n] = c >>> 0; }
+  const crc = u => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = T[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zip(files){
+    const parts = [], cen = []; let off = 0;
+    const u16 = n => [n & 255, (n >>> 8) & 255], u32 = n => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+    files.forEach(([name, text]) => {
+      const nm = enc.encode(name), data = enc.encode(text), c = crc(data);
+      const head = [].concat([0x50, 0x4b, 3, 4], u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(c), u32(data.length), u32(data.length), u16(nm.length), u16(0));
+      parts.push(new Uint8Array(head), nm, data);
+      cen.push({nm, c, len:data.length, off}); off += head.length + nm.length + data.length;
+    });
+    let csize = 0; const cstart = off;
+    cen.forEach(f => { const h = [].concat([0x50, 0x4b, 1, 2], u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(f.c), u32(f.len), u32(f.len), u16(f.nm.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(f.off));
+      parts.push(new Uint8Array(h), f.nm); csize += h.length + f.nm.length; });
+    parts.push(new Uint8Array([].concat([0x50, 0x4b, 5, 6], u16(0), u16(0), u16(cen.length), u16(cen.length), u32(csize), u32(cstart), u16(0))));
+    return new Blob(parts, {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  const x = s => String(s == null ? '' : s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const col = i => { let s = ''; i++; while (i){ s = String.fromCharCode(65 + (i - 1) % 26) + s; i = Math.floor((i - 1) / 26); } return s; };
+  // sheets: [{name, widths:[..], rows:[[..]], head:머리줄 수(기본 1), title:맨 윗줄 제목(선택)}]
+  function book(sheets){
+    const files = [];
+    files.push(['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>']);
+    files.push(['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>']);
+    files.push(['xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + sheets.map((sh, i) => `<sheet name="${x(sh.name.replace(/[\\/?*\[\]:]/g, ' ').slice(0, 31))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>']);
+    files.push(['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') + `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`]);
+    // 모양: 0 보통(줄 바꿈·위 맞춤·테두리), 1 머리줄(굵게·초록 바탕), 2 제목(굵고 크게)
+    files.push(['xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="14"/><name val="맑은 고딕"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8F6F0"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFB8C4BE"/></left><right style="thin"><color rgb="FFB8C4BE"/></right><top style="thin"><color rgb="FFB8C4BE"/></top><bottom style="thin"><color rgb="FFB8C4BE"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']);
+    sheets.forEach((sh, si) => {
+      const rows = (sh.title ? [[sh.title]] : []).concat(sh.rows), t0 = sh.title ? 1 : 0, hd = sh.head == null ? 1 : sh.head;
+      const body = rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) => {
+        const st = sh.title && ri === 0 ? 2 : (ri - t0 < hd ? 1 : 0), ref = col(ci) + (ri + 1);
+        if (typeof v === 'number' && isFinite(v)) return `<c r="${ref}" s="${st}"><v>${v}</v></c>`;
+        return `<c r="${ref}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+      }).join('') + '</row>').join('');
+      const cols = (sh.widths || []).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('');
+      files.push([`xl/worksheets/sheet${si + 1}.xml`, `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"${si ? '' : ' tabSelected="1"'}><pane ySplit="${t0 + hd}" topLeftCell="A${t0 + hd + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>${cols ? `<cols>${cols}</cols>` : ''}<sheetData>${body}</sheetData></worksheet>`]);
+    });
+    return zip(files);
+  }
+  function save(name, sheets){
+    const a = document.createElement('a'); a.href = URL.createObjectURL(book(sheets)); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  return {book, save};
+})();
+
+/* ===== 주간 기록 → 엑셀 ===== */
+function reportSheets(){
+  const days = weekDays(repWk), ks = days.map(dkey), R = sorted(), allN = R.map(x => x.n), nm = n => { const x = R.find(r => r.n === n); return x ? x.name.trim() : ''; };
+  const itemsOf = k => ((hwDay(k) || {}).items || []).filter(x => x.t || x.done.length);
+  const span = `${days[0].getFullYear()}년 ${days[0].getMonth() + 1}월 ${days[0].getDate()}일(월) ~ ${days[4].getMonth() + 1}월 ${days[4].getDate()}일(금)`;
+  const dayRows = days.map((d, i) => {
+    const k = ks[i], w = (S.wxLog || {})[k], wd = d.getDay();
+    const wx = w ? `${(WMO[w.c] || ['날씨'])[0]}${w.lo != null ? ` ${Math.round(w.lo)}~${Math.round(w.hi)}°` : ''}${w.a >= 0 ? ` 미세먼지 ${AIR[w.a]}` : ''}` : '';
+    const plan = todayList(wd).filter(r => r.n !== '점심시간').map(r => [r.n, planOf(r.n, d)]).filter(x => x[1]).map(x => `${x[0]} ${x[1]}`).join('\n');
+    const ev = wks(k).map(x => `[주간] ${x.t}`).concat(evs(k).map(x => (x.c === 'w' ? '[업무] ' : '') + x.t)).join('\n');
+    const att = Object.entries(S.att[k] || {}).filter(([n]) => allN.includes(+n)).sort((a, b) => a[0] - b[0]).map(([n, s]) => `${ATT[s]} ${n} ${nm(+n)}`.trim()).join('\n');
+    const its = itemsOf(k).map((it, j) => { const done = it.done.filter(n => allN.includes(n)), miss = allN.filter(n => !done.includes(n));
+      return `${it.t || '확인 ' + (j + 1)} ${done.length}/${allN.length}` + (miss.length && miss.length < allN.length ? ` (안 함: ${miss.join(', ')})` : ''); }).join('\n');
+    const st = Object.entries((S.praiseLog || {})[k] || {}).filter(([n]) => allN.includes(+n)).reduce((t, [, c]) => t + c, 0);
+    return [`${d.getMonth() + 1}/${d.getDate()}`, DOW1[wd], wx, plan, ((S.plan[k] || {})['전달'] || '').trim(), ev, att || '모두 출석', its, st || ''];
+  });
+  const kidRows = R.map(({n}) => {
+    const a = []; let got = 0, all = 0, st = 0;
+    ks.forEach((k, i) => { const s2 = (S.att[k] || {})[n]; if (s2) a.push(`${ATT[s2]} ${md(days[i])}`);
+      const its = itemsOf(k); all += its.length; got += its.filter(x => x.done.includes(n)).length; st += ((S.praiseLog || {})[k] || {})[n] || 0; });
+    const notes = (S.notes[n] || []).filter(x => x.d >= ks[0] && x.d <= ks[4]).sort((p, q) => p.d < q.d ? -1 : 1).map(x => `${md(new Date(x.d + 'T12:00'))} ${x.t}`).join('\n');
+    return [n, nm(n), a.join('\n') || '모두 출석', all ? `${got}/${all}` : '', st || '', S.praise[n] || 0, notes];
+  });
+  const chk = S.labels.check || '확인', note = S.labels.note || '아이 기록';
+  return {span, first:days[0], sheets:[
+    {name:'날마다', title:`${cfg().sub} 주간 기록 · ${span}`, widths:[8, 6, 20, 42, 26, 28, 20, 34, 6], rows:[['날짜', '요일', '날씨', '공부한 내용', '전달할 말', '일정', '출결', chk, '별']].concat(dayRows)},
+    {name:'아이별', title:`${cfg().sub} 주간 기록 · ${span}`, widths:[6, 12, 16, 9, 9, 9, 70], rows:[['번호', '이름', '출결', chk, '이번 주 별', '모은 별', note]].concat(kidRows)}]};
+}
+$('repXlsx').onclick = () => { const r = reportSheets(); XL.save(`개굴칠판_주간기록_${dkey(r.first)}.xlsx`, r.sheets); };
+
+/* ===== 교무수첩 (비밀번호로 잠그는 선생님 수첩) ===== */
+const NB = {open:false, d:offDay(0), t:0, mode:''};
+function nbHash(pw, salt){ let h1 = 0x811c9dc5, h2 = 0x1b873593; const s = salt + '|' + pw;
+  for (let r = 0; r < 300; r++) for (let i = 0; i < s.length; i++){ h1 = Math.imul(h1 ^ s.charCodeAt(i), 16777619); h2 = Math.imul((h2 + s.charCodeAt(i) + r) | 0, 0x85ebca6b) ^ (h1 >>> 13); }
+  return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36); }
+const nbData = () => (S.nb = S.nb || {});
+const nbDayOf = k => ((nbData().days || {})[k]) || {};
+function nbSetDay(k, f, v){ const nb = nbData(); nb.days = Object.assign({}, nb.days); const d = Object.assign({}, nb.days[k]); if (v.trim()) d[f] = v; else delete d[f];
+  if (Object.keys(d).length) nb.days[k] = d; else delete nb.days[k]; save(); }
+const nbFree = () => { try{ return MOB && localStorage.getItem('jgg-nb-free') === '1'; }catch(e){ return false; } };
+function nbArm(){ clearTimeout(NB.t); if (NB.open) NB.t = setTimeout(() => { if (NB.open && !nbFree()){ nbLock(); bubble('교무수첩을 다시 잠갔어요', '', 3000); } }, 5 * 60000); }
+function nbLock(){ NB.open = false; clearTimeout(NB.t); $('nbBox').hidden = true; $('nbBox').innerHTML = ''; $('nbLock').hidden = false; ['nbNav', 'nbXlsx', 'nbPwBtn'].forEach(id => $(id).hidden = true); nbLockView(); }
+function nbLockView(mode){
+  const pw = nbData().pw, L = $('nbLock'); NB.mode = mode || (pw ? 'ask' : 'set');
+  if (NB.mode === 'set' || NB.mode === 'change' || NB.mode === 'reset'){
+    L.innerHTML = `<h3>${NB.mode === 'set' ? '교무수첩 비밀번호 정하기' : '새 비밀번호 정하기'}</h3>
+      <p>${NB.mode === 'set' ? '선생님만 볼 수 있게 비밀번호로 잠가요. 동기화한 다른 컴퓨터와 휴대폰에서도 같은 비밀번호를 써요.' : '새로 쓸 비밀번호를 넣어 주세요.'}</p>
+      <input class="inp" id="nbP1" type="password" autocomplete="new-password" placeholder="비밀번호 (4자 넘게)">
+      <input class="inp" id="nbP2" type="password" autocomplete="new-password" placeholder="한 번 더">
+      <input class="inp" id="nbHint" placeholder="잊었을 때 볼 힌트 (안 적어도 돼요)" value="${esc((pw && pw.hint) || '')}">
+      <div class="err" id="nbErr"></div><button class="b go" id="nbGo" type="button">정하기</button>`;
+    const go = () => { const a = $('nbP1').value, b = $('nbP2').value;
+      if (a.length < 4) return $('nbErr').textContent = '비밀번호는 4자 넘게 정해 주세요.';
+      if (a !== b) return $('nbErr').textContent = '두 칸의 비밀번호가 달라요.';
+      const salt = uid36(); nbData().pw = {s:salt, h:nbHash(a, salt), hint:$('nbHint').value.trim()}; save(); nbUnlock(); };
+    $('nbGo').onclick = go; $('nbP2').onkeydown = e => { if (e.key === 'Enter') go(); }; $('nbP1').focus();
+  } else if (NB.mode === 'forgot'){
+    let on = false; try{ on = SY.on; }catch(e){}
+    L.innerHTML = `<h3>비밀번호를 잊었을 때</h3>${pw.hint ? `<p>힌트: <b>${esc(pw.hint)}</b></p>` : ''}
+      <p>${on ? '동기화 저장소 비밀번호를 넣으면 교무수첩 비밀번호를 새로 정할 수 있어요. 적어 둔 내용은 그대로예요.' : '동기화를 연결해 두면 동기화 저장소 비밀번호로 새로 정할 수 있어요. 지금은 연결되어 있지 않아서 힌트만 보여 드려요.'}</p>
+      ${on ? '<input class="inp" id="nbSyPw" type="password" placeholder="동기화 저장소 비밀번호"><div class="err" id="nbErr"></div><button class="b go" id="nbGo" type="button">확인</button>' : ''}
+      <button class="link" id="nbBack" type="button">돌아가기</button>`;
+    $('nbBack').onclick = () => nbLockView('ask');
+    if (on){ const go = () => { if ($('nbSyPw').value && $('nbSyPw').value === SY.key) nbLockView('reset'); else $('nbErr').textContent = '동기화 저장소 비밀번호가 맞지 않아요.'; };
+      $('nbGo').onclick = go; $('nbSyPw').onkeydown = e => { if (e.key === 'Enter') go(); }; $('nbSyPw').focus(); }
+  } else {
+    L.innerHTML = `<h3>교무수첩</h3><p>비밀번호를 넣으면 열려요.</p>
+      <input class="inp" id="nbP" type="password" autocomplete="current-password" placeholder="비밀번호">
+      <div class="err" id="nbErr"></div><button class="b go" id="nbGo" type="button">열기</button>
+      ${MOB ? '<label class="cfg-row" style="font-size:.85em"><input type="checkbox" id="nbKeep"> 이 휴대폰에서는 다음부터 묻지 않기</label>' : ''}
+      <button class="link" id="nbForgot" type="button">비밀번호를 잊었어요</button>`;
+    const go = () => { if (nbHash($('nbP').value, pw.s) === pw.h){ if (MOB && $('nbKeep').checked){ try{ localStorage.setItem('jgg-nb-free', '1'); }catch(e){} } nbUnlock(); }
+      else { $('nbErr').textContent = '비밀번호가 맞지 않아요.'; $('nbP').select(); } };
+    $('nbGo').onclick = go; $('nbP').onkeydown = e => { if (e.key === 'Enter') go(); }; $('nbForgot').onclick = () => nbLockView('forgot'); $('nbP').focus();
+  }
+}
+function nbUnlock(){ NB.open = true; $('nbLock').hidden = true; $('nbBox').hidden = false; ['nbNav', 'nbXlsx', 'nbPwBtn'].forEach(id => $(id).hidden = false); nbArm(); renderNb(); }
+function nbDates(){ const set = new Set(Object.keys(nbData().days || {}));
+  Object.keys(S.events).forEach(k => { if ((S.events[k] || []).some(x => x.c === 'w')) set.add(k); });
+  Object.values(S.notes).forEach(a => (a || []).forEach(x => set.add(x.d)));
+  return [...set].sort(); }
+function renderNb(){
+  if (!NB.open) return;
+  const k = dkey(NB.d), wd = NB.d.getDay(), rel = Math.round((NB.d - offDay(0)) / 864e5), R = sorted(), day = nbDayOf(k);
+  $('nbDate').innerHTML = `${NB.d.getMonth() + 1}월 ${NB.d.getDate()}일 ${DAYS[wd]}${rel ? ` <span class="rel">${relName(rel)}</span>` : ''}`; $('nbJump').value = k;
+  const works = (S.events[k] || []).filter(x => x.c === 'w');
+  const soonKs = Object.keys(S.events).filter(x => x > k).sort().slice(0, 60), soon = [];
+  soonKs.forEach(kk => (S.events[kk] || []).forEach(x => { if (x.c === 'w' && !x.done && soon.length < 6) soon.push([kk, x]); }));
+  const notes = []; R.forEach(({n, name}) => (S.notes[n] || []).forEach(x => { if (x.d === k) notes.push({n, name:name.trim(), x}); }));
+  const recent = nbDates().filter(x => x !== k).slice(-8).reverse();
+  $('nbBox').innerHTML = `
+    <section class="nb-sec"><h4>업무 <small>달력의 업무 일정과 같은 기록이에요</small></h4>
+      <div class="nb-add"><input class="inp" id="nbWkIn" placeholder="이 날 할 업무"><button class="pubt" id="nbWkPub" type="button">비공개</button><button class="b go" id="nbWkAdd" type="button">추가</button></div>
+      <ul class="nb-list">${works.length ? works.map(x => `<li class="${x.done ? 'done' : ''}"><input type="checkbox" data-wdone="${x.id}" ${x.done ? 'checked' : ''} aria-label="다 했어요"><input class="inp" data-wtext="${x.id}" value="${esc(x.t)}"><button type="button" class="pubt ${x.pub ? 'on' : ''}" data-wpub="${x.id}">${x.pub ? '공개' : '비공개'}</button><button class="mini" type="button" data-wrm="${x.id}">지우기</button></li>`).join('') : '<li class="nb-none">이 날 업무가 없어요</li>'}</ul>
+      ${soon.length ? `<div class="nb-soon"><b>다가오는 업무</b><ul class="nb-list">${soon.map(([kk, x]) => `<li><span class="d">${md(new Date(kk + 'T12:00'))}</span><span style="flex:1">${esc(x.t)}</span><button class="mini" type="button" data-go="${kk}">보기</button></li>`).join('')}</ul></div>` : ''}</section>
+    <section class="nb-sec"><h4>회의 · 전달 사항</h4><textarea class="inp" data-nbf="meet" placeholder="회의 내용, 전달받은 일을 적어요">${esc(day.meet || '')}</textarea></section>
+    <section class="nb-sec"><h4>${esc(S.labels.note || '아이 기록')} <small>학급 체크의 기록과 같아요</small></h4>
+      <div class="nb-add"><select class="inp" id="nbKid">${R.map(({n, name}) => `<option value="${n}">${n} ${esc(name.trim())}</option>`).join('')}</select><input class="inp" id="nbNoteIn" placeholder="이 날 아이 기록"><button class="b go" id="nbNoteAdd" type="button">기록</button></div>
+      <ul class="nb-list">${notes.length ? notes.map(({n, name, x}) => `<li><span class="who">${n} ${esc(name)}</span><input class="inp" data-ntx="${n}:${x.id}" value="${esc(x.t)}"><button class="mini" type="button" data-nrm2="${n}:${x.id}">지우기</button></li>`).join('') : '<li class="nb-none">이 날 아이 기록이 없어요</li>'}</ul></section>
+    <section class="nb-sec"><h4>하루 기록</h4><textarea class="inp" data-nbf="day" placeholder="그날 있었던 일, 기억해 둘 것을 자유롭게 적어요">${esc(day.day || '')}</textarea></section>
+    <div class="nb-days">${recent.length ? '기록이 있는 날: ' + recent.map(x => `<button type="button" data-go="${x}">${md(new Date(x + 'T12:00'))}</button>`).join('') : '아직 다른 날 기록이 없어요.'}</div>`;
+  const B = $('nbBox'), wk = id => (S.events[k] || []).find(x => x.id === id);
+  let pub = false;
+  $('nbWkPub').onclick = () => { pub = !pub; $('nbWkPub').textContent = pub ? '공개' : '비공개'; $('nbWkPub').classList.toggle('on', pub); };
+  const addW = () => { const t = $('nbWkIn').value.trim(); if (!t) return; (S.events[k] = S.events[k] || []).push(Object.assign({id:uid36(), t, c:'w'}, pub ? {pub:1} : {})); save(); renderCal(); renderNb(); $('nbWkIn').focus(); };
+  $('nbWkAdd').onclick = addW; $('nbWkIn').onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) addW(); };
+  B.querySelectorAll('[data-wdone]').forEach(c => c.onchange = () => { const x = wk(c.dataset.wdone); if (!x) return; if (c.checked) x.done = 1; else delete x.done; save(); renderNb(); });
+  B.querySelectorAll('[data-wtext]').forEach(i => i.oninput = () => { const x = wk(i.dataset.wtext); if (x && i.value.trim()){ x.t = i.value; save(); renderCal(); } });
+  B.querySelectorAll('[data-wpub]').forEach(b => b.onclick = () => { const x = wk(b.dataset.wpub); if (!x) return; if (x.pub) delete x.pub; else x.pub = 1; save(); renderCal(); renderNb(); });
+  B.querySelectorAll('[data-wrm]').forEach(b => b.onclick = () => { if (!b.dataset.ok){ b.dataset.ok = 1; b.textContent = '정말 지울까요?'; return; }
+    S.events[k] = (S.events[k] || []).filter(x => x.id !== b.dataset.wrm); if (!S.events[k].length) delete S.events[k]; save(); renderCal(); renderNb(); });
+  B.querySelectorAll('[data-nbf]').forEach(t => t.oninput = () => { nbSetDay(k, t.dataset.nbf, t.value); nbArm(); });
+  const addN = () => { const t = $('nbNoteIn').value.trim(), n = +$('nbKid').value; if (!t || !n) return; (S.notes[n] = S.notes[n] || []).push({id:uid36(), d:k, t}); save(); NB.kid = n; renderAll(); renderNb(); };
+  if (NB.kid && R.some(x => x.n === NB.kid)) $('nbKid').value = NB.kid;
+  $('nbNoteAdd').onclick = addN; $('nbNoteIn').onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) addN(); };
+  B.querySelectorAll('[data-ntx]').forEach(i => i.oninput = () => { const [n, id] = i.dataset.ntx.split(':'), x = (S.notes[n] || []).find(y => y.id === id); if (x && i.value.trim()){ x.t = i.value; save(); } });
+  B.querySelectorAll('[data-nrm2]').forEach(b => b.onclick = () => { if (!b.dataset.ok){ b.dataset.ok = 1; b.textContent = '정말 지울까요?'; return; }
+    const [n, id] = b.dataset.nrm2.split(':'); S.notes[n] = (S.notes[n] || []).filter(y => y.id !== id); if (!S.notes[n].length) delete S.notes[n]; save(); renderAll(); renderNb(); });
+  B.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { NB.d = new Date(b.dataset.go + 'T12:00'); renderNb(); });
+}
+function openNb(open){
+  $('nbDlg').hidden = !open; $('mgPop').hidden = true;
+  if (!open){ nbLock(); $('nbLock').innerHTML = ''; return; }
+  NB.d = offDay(0);
+  if (nbData().pw && nbFree()) nbUnlock(); else nbLock();
+}
+$('nbBtn').onclick = () => openNb(true);
+$('mbNb').onclick = () => openNb(true);
+$('nbClose').onclick = () => openNb(false);
+$('nbDlg').addEventListener('pointerdown', nbArm); $('nbDlg').addEventListener('keydown', nbArm);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('nbDlg').hidden) openNb(false); });
+$('nbPrev').onclick = () => { NB.d = new Date(NB.d); NB.d.setDate(NB.d.getDate() - 1); renderNb(); };
+$('nbNext').onclick = () => { NB.d = new Date(NB.d); NB.d.setDate(NB.d.getDate() + 1); renderNb(); };
+$('nbToday').onclick = () => { NB.d = offDay(0); renderNb(); };
+$('nbJump').onchange = e => { if (e.target.value){ NB.d = new Date(e.target.value + 'T12:00'); renderNb(); } };
+$('nbPwBtn').onclick = () => { NB.open = false; $('nbBox').hidden = true; $('nbLock').hidden = false; ['nbNav', 'nbXlsx', 'nbPwBtn'].forEach(id => $(id).hidden = true); nbLockView('change'); };
+// 교무수첩 → 엑셀 (적어 둔 모든 날)
+$('nbXlsx').onclick = () => {
+  const R = sorted(), nm = n => { const x = R.find(r => r.n === +n); return x ? x.name.trim() : ''; }, dd = k => { const d = new Date(k + 'T12:00'); return `${k} (${DOW1[d.getDay()]})`; };
+  const days = nbData().days || {}, dk = Object.keys(days).sort();
+  const works = []; Object.keys(S.events).sort().forEach(k => (S.events[k] || []).forEach(x => { if (x.c === 'w') works.push([dd(k), x.t, x.pub ? '공개' : '비공개', x.done ? '다 함' : '']); }));
+  const notes = []; Object.keys(S.notes).forEach(n => (S.notes[n] || []).forEach(x => notes.push([x.d, +n, nm(n), x.t]))); notes.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] - b[1]);
+  XL.save(`개굴칠판_교무수첩_${dkey()}.xlsx`, [
+    {name:'업무', title:`${cfg().sub} 교무수첩 · 업무`, widths:[18, 60, 10, 10], rows:[['날짜', '업무', '공개', '완료']].concat(works)},
+    {name:'회의·전달', title:`${cfg().sub} 교무수첩 · 회의 · 전달 사항`, widths:[18, 100], rows:[['날짜', '내용']].concat(dk.filter(k => days[k].meet).map(k => [dd(k), days[k].meet]))},
+    {name:'아이 기록', title:`${cfg().sub} 교무수첩 · ${S.labels.note || '아이 기록'}`, widths:[18, 6, 12, 80], rows:[['날짜', '번호', '이름', '내용']].concat(notes.map(r => [dd(r[0]), r[1], r[2], r[3]]))},
+    {name:'하루 기록', title:`${cfg().sub} 교무수첩 · 하루 기록`, widths:[18, 100], rows:[['날짜', '내용']].concat(dk.filter(k => days[k].day).map(k => [dd(k), days[k].day]))}]);
+};
+// 다른 기기에서 바뀐 기록이 오면 다시 그림 (적는 중이면 기다림)
+{ const _raNb = renderAll; renderAll = function(){ _raNb(); if (NB.open){ const a = document.activeElement; if (!a || !$('nbBox').contains(a) || a.tagName === 'BUTTON') renderNb(); } }; }
 </script>
 </body>
 </html>
