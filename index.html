@@ -775,6 +775,19 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
   body.printing-nb .rp-foot{font-size:8pt}
   .rp-form thead th,.rp-form th:first-child{-webkit-print-color-adjust:exact; print-color-adjust:exact}
 }
+
+/* 교무수첩 머리줄 정리: [하루|주간] [날짜 옮기기] … [이 주 내보내기] [닫기] */
+.nb-out{display:flex; gap:.4em} .nb-out[hidden],.nb-foot[hidden]{display:none}
+.nb-foot{display:flex; align-items:center; gap:.6em; padding-top:8px; color:var(--ink-3); font-size:13px}
+.nb-foot .link{background:none; border:none; color:var(--ink-3); text-decoration:underline; cursor:pointer; font-size:1em}
+.nb-nav{background:#f6f8f7; border-radius:999px; padding:3px 6px}
+@media print{ body.printing-nb .nb-foot{display:none!important} }
+.nb-tools{font-size:19px; flex-wrap:wrap; row-gap:8px}
+.nb-tools .mini{font-size:.78em; padding:.35em .8em}
+.nb-tools .nb-tabs button{font-size:.82em}
+.nb-nav b{min-width:8.6em; font-size:.95em}
+.nb-jump{font-size:.72em!important; width:8.6em!important; padding:.25em .4em!important}
+.nb-foot #nbPwBtn{margin-left:auto}
 </style>
 </head>
 <body>
@@ -1023,9 +1036,11 @@ body.mobile #syDlg .roster{width:min(560px,94vw); max-height:90vh; overflow:auto
       <span class="nb-tabs" id="nbTabs" hidden><button type="button" data-nbt="day" class="on">하루</button><button type="button" data-nbt="week">주간</button></span>
       <span class="nb-nav" id="nbNav" hidden><button class="mini" id="nbPrev" type="button" aria-label="전 날">◀</button><b id="nbDate"></b><button class="mini" id="nbNext" type="button" aria-label="다음 날">▶</button><button class="mini" id="nbToday" type="button">오늘</button><input class="inp nb-jump" id="nbJump" type="date" aria-label="날짜로 가기"></span>
       <span class="sp"></span>
-      <button class="mini" id="nbPrint" type="button" hidden>인쇄 · PDF</button><button class="mini" id="nbXlsx" type="button" hidden>엑셀로 저장</button><button class="mini" id="nbPwBtn" type="button" hidden>비밀번호 바꾸기</button><button class="mini" id="nbClose" type="button">잠그고 닫기</button></div>
+      <span class="nb-out" id="nbOut" hidden><button class="mini go" id="nbXlsx" type="button" title="보고 있는 주를 엑셀 파일 하나로 저장해요">이 주 엑셀로 저장</button><button class="mini" id="nbPrint" type="button" title="보고 있는 주를 인쇄하거나 PDF로 저장해요">이 주 인쇄</button></span>
+      <button class="mini" id="nbClose" type="button">잠그고 닫기</button></div>
     <div id="nbLock" class="nb-lock"></div>
     <div id="nbBox" class="nb-box" hidden></div>
+    <div class="nb-foot" id="nbFoot" hidden><span id="nbWeekInfo"></span><span class="sp"></span><button class="link" id="nbPwBtn" type="button">비밀번호 바꾸기</button></div>
   </div>
 </div>
 <div id="sheetDlg" class="dlg-wrap" hidden>
@@ -3020,7 +3035,7 @@ function renderReport(){
       <td>${its.length ? `<ul>${its.join('')}</ul>` : ''}</td>
       <td class="rp-c">${st ? (st > 0 ? '+' : '') + st : ''}</td></tr>`;
   }).join('');
-  // 2. 아이별
+  // 2. 학생별
   const kidRows = R.map(({n}) => {
     const a = [], cnt = {a:0, l:0, e:0}; let got = 0, all = 0, st = 0;
     ks.forEach((k, i) => { const s = (S.att[k] || {})[n]; if (s){ cnt[s]++; a.push(`${ATT[s]} ${md(days[i])}`); }
@@ -3037,7 +3052,7 @@ function renderReport(){
     <div class="rp-sum"><span>결석 <b>${tot.a}</b></span><span>지각 <b>${tot.l}</b></span><span>조퇴 <b>${tot.e}</b></span><span>칭찬 별 <b>${tot.star > 0 ? '+' : ''}${tot.star}</b></span><span>아이 기록 <b>${tot.note}</b>건</span></div>
     <h3>날마다</h3>
     <table class="rp-t rp-days"><thead><tr><th>날짜 · 날씨</th><th>공부한 내용</th><th>일정</th><th>출결</th><th>${esc(S.labels.check || '확인')}</th><th>별</th></tr></thead><tbody>${dayRows}</tbody></table>
-    <h3>아이별</h3>
+    <h3>학생별</h3>
     <table class="rp-t rp-kids"><thead><tr><th>번호 이름</th><th>출결</th><th>${esc(S.labels.check || '확인')}</th><th>칭찬 별</th><th>${esc(S.labels.note || '아이 기록')}</th></tr></thead><tbody>${kidRows}</tbody></table>
     <p class="rp-foot">출결·확인·아이 기록이 있는 아이는 색으로 표시했어요.${noStarLog ? ' 칭찬 별과 날씨는 이번 판부터 날마다 기록돼요.' : ''} · ${new Date().toLocaleString('ko-KR')} 출력 · 개굴칠판 © 2026 정예훈(개굴정)</p>`;
 }
@@ -3285,12 +3300,12 @@ function reportSheets(){
   const chk = S.labels.check || '확인', note = S.labels.note || '아이 기록';
   return {span, first:days[0], sheets:[
     {name:'날마다', title:`${cfg().sub} 주간 기록 · ${span}`, widths:[8, 6, 20, 42, 26, 28, 20, 34, 6], rows:[['날짜', '요일', '날씨', '공부한 내용', '전달할 말', '일정', '출결', chk, '별']].concat(dayRows)},
-    {name:'아이별', title:`${cfg().sub} 주간 기록 · ${span}`, widths:[6, 12, 16, 9, 9, 9, 70], rows:[['번호', '이름', '출결', chk, '이번 주 별', '모은 별', note]].concat(kidRows)}]};
+    {name:'학생별', title:`${cfg().sub} 주간 기록 · ${span}`, widths:[6, 12, 16, 9, 9, 9, 70], rows:[['번호', '이름', '출결', chk, '이번 주 별', '모은 별', note]].concat(kidRows)}]};
 }
 $('repXlsx').onclick = () => { const r = reportSheets(); XL.save(`개굴칠판_주간기록_${dkey(r.first)}.xlsx`, r.sheets); };
 
 /* ===== 교무수첩 (비밀번호로 잠그는 선생님 수첩) ===== */
-const NB = {open:false, d:offDay(0), t:0, mode:'', tab:'day'}, NB_IDS = ['nbNav', 'nbXlsx', 'nbPwBtn', 'nbTabs'];
+const NB = {open:false, d:offDay(0), t:0, mode:'', tab:'day'}, NB_IDS = ['nbNav', 'nbOut', 'nbFoot', 'nbTabs'];
 function nbHash(pw, salt){ let h1 = 0x811c9dc5, h2 = 0x1b873593; const s = salt + '|' + pw;
   for (let r = 0; r < 300; r++) for (let i = 0; i < s.length; i++){ h1 = Math.imul(h1 ^ s.charCodeAt(i), 16777619); h2 = Math.imul((h2 + s.charCodeAt(i) + r) | 0, 0x85ebca6b) ^ (h1 >>> 13); }
   return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36); }
@@ -3300,7 +3315,7 @@ function nbSetDay(k, f, v){ const nb = nbData(); nb.days = Object.assign({}, nb.
   if (Object.keys(d).length) nb.days[k] = d; else delete nb.days[k]; save(); }
 const nbFree = () => { try{ return MOB && localStorage.getItem('jgg-nb-free') === '1'; }catch(e){ return false; } };
 function nbArm(){ clearTimeout(NB.t); if (NB.open) NB.t = setTimeout(() => { if (NB.open && !nbFree()){ nbLock(); bubble('교무수첩을 다시 잠갔어요', '', 3000); } }, 5 * 60000); }
-function nbLock(){ NB.open = false; clearTimeout(NB.t); $('nbBox').hidden = true; $('nbBox').innerHTML = ''; $('nbLock').hidden = false; NB_IDS.forEach(id => $(id).hidden = true); $('nbPrint').hidden = true; nbLockView(); }
+function nbLock(){ NB.open = false; clearTimeout(NB.t); $('nbBox').hidden = true; $('nbBox').innerHTML = ''; $('nbLock').hidden = false; NB_IDS.forEach(id => $(id).hidden = true); nbLockView(); }
 function nbLockView(mode){
   const pw = nbData().pw, L = $('nbLock'); NB.mode = mode || (pw ? 'ask' : 'set');
   if (NB.mode === 'set' || NB.mode === 'change' || NB.mode === 'reset'){
@@ -3343,7 +3358,8 @@ function nbDates(){ const set = new Set(Object.keys(nbData().days || {}));
 function renderNb(){
   if (!NB.open) return;
   document.querySelectorAll('[data-nbt]').forEach(b => b.classList.toggle('on', b.dataset.nbt === NB.tab));
-  $('nbPrint').hidden = NB.tab !== 'week'; $('nbToday').textContent = NB.tab === 'week' ? '이번 주' : '오늘'; $('nbXlsx').textContent = NB.tab === 'week' ? '이 주 엑셀로 저장' : '전체 엑셀로 저장';
+  $('nbToday').textContent = NB.tab === 'week' ? '이번 주' : '오늘';
+  { const w = weekOf(NB.d); $('nbWeekInfo').textContent = `엑셀과 인쇄는 지금 보고 있는 주(${md(w[0])} ~ ${md(w[4])})를 한 파일로 만들어요.`; }
   $('nbBox').classList.toggle('nb-week', NB.tab === 'week');
   if (NB.tab === 'week') return renderNbWeek();
   const k = dkey(NB.d), wd = NB.d.getDay(), rel = Math.round((NB.d - offDay(0)) / 864e5), R = sorted(), day = nbDayOf(k);
@@ -3352,7 +3368,6 @@ function renderNb(){
   const soonKs = Object.keys(S.events).filter(x => x > k).sort().slice(0, 60), soon = [];
   soonKs.forEach(kk => (S.events[kk] || []).forEach(x => { if (x.c === 'w' && !x.done && soon.length < 6) soon.push([kk, x]); }));
   const notes = []; R.forEach(({n, name}) => (S.notes[n] || []).forEach(x => { if (x.d === k) notes.push({n, name:name.trim(), x}); }));
-  const recent = nbDates().filter(x => x !== k).slice(-8).reverse();
   $('nbBox').innerHTML = `
     <section class="nb-sec"><h4>업무 <small>달력의 업무 일정과 같은 기록이에요</small></h4>
       <div class="nb-add"><input class="inp" id="nbWkIn" placeholder="이 날 할 업무"><button class="pubt" id="nbWkPub" type="button">비공개</button><button class="b go" id="nbWkAdd" type="button">추가</button></div>
@@ -3362,8 +3377,7 @@ function renderNb(){
     <section class="nb-sec"><h4>${esc(S.labels.note || '아이 기록')} <small>학급 체크의 기록과 같아요</small></h4>
       <div class="nb-add"><select class="inp" id="nbKid">${R.map(({n, name}) => `<option value="${n}">${n} ${esc(name.trim())}</option>`).join('')}</select><input class="inp" id="nbNoteIn" placeholder="이 날 아이 기록"><button class="b go" id="nbNoteAdd" type="button">기록</button></div>
       <ul class="nb-list">${notes.length ? notes.map(({n, name, x}) => `<li><span class="who">${n} ${esc(name)}</span><input class="inp" data-ntx="${n}:${x.id}" value="${esc(x.t)}"><button class="mini" type="button" data-nrm2="${n}:${x.id}">지우기</button></li>`).join('') : '<li class="nb-none">이 날 아이 기록이 없어요</li>'}</ul></section>
-    <section class="nb-sec"><h4>하루 기록</h4><textarea class="inp" data-nbf="day" placeholder="그날 있었던 일, 기억해 둘 것을 자유롭게 적어요">${esc(day.day || '')}</textarea></section>
-    <div class="nb-days">${recent.length ? '기록이 있는 날: ' + recent.map(x => `<button type="button" data-go="${x}">${md(new Date(x + 'T12:00'))}</button>`).join('') : '아직 다른 날 기록이 없어요.'}</div>`;
+    <section class="nb-sec"><h4>하루 기록</h4><textarea class="inp" data-nbf="day" placeholder="그날 있었던 일, 기억해 둘 것을 자유롭게 적어요">${esc(day.day || '')}</textarea></section>`;
   const B = $('nbBox'), wk = id => (S.events[k] || []).find(x => x.id === id);
   let pub = false;
   $('nbWkPub').onclick = () => { pub = !pub; $('nbWkPub').textContent = pub ? '공개' : '비공개'; $('nbWkPub').classList.toggle('on', pub); };
@@ -3399,34 +3413,10 @@ $('nbPrev').onclick = () => { NB.d = new Date(NB.d); NB.d.setDate(NB.d.getDate()
 $('nbNext').onclick = () => { NB.d = new Date(NB.d); NB.d.setDate(NB.d.getDate() + (NB.tab === 'week' ? 7 : 1)); renderNb(); };
 $('nbToday').onclick = () => { NB.d = offDay(0); renderNb(); };
 $('nbJump').onchange = e => { if (e.target.value){ NB.d = new Date(e.target.value + 'T12:00'); renderNb(); } };
-$('nbPwBtn').onclick = () => { NB.open = false; $('nbBox').hidden = true; $('nbLock').hidden = false; NB_IDS.forEach(id => $(id).hidden = true); $('nbPrint').hidden = true; nbLockView('change'); };
+$('nbPwBtn').onclick = () => { NB.open = false; $('nbBox').hidden = true; $('nbLock').hidden = false; NB_IDS.forEach(id => $(id).hidden = true); nbLockView('change'); };
 // 교무수첩 → 엑셀 (적어 둔 모든 날)
-$('nbXlsx').onclick = () => {
-  if (NB.tab === 'week') return nbWeekXlsx();
-  const R = sorted(), allN = R.map(x => x.n), days = nbData().days || {}, set = new Set(nbDates());
-  const dd = k => { const d = new Date(k + 'T12:00'); return `${d.getFullYear()}.${p2(d.getMonth() + 1)}.${p2(d.getDate())}\n(${DOW1[d.getDay()]})`; };
-  const ks = [...set].sort(), w = [14, 40, 48, 48, 48];
-  const T = xlTop(`${cfg().sub} 교무수첩`, [ks.length ? `기간  ${ks[0]} ~ ${ks[ks.length - 1]} · 기록한 날 ${ks.length}일` : '아직 적은 기록이 없어요'], 5), r = T.rows, h = T.heights;
-  h[r.length] = 30; r.push(['날짜', '업무', '회의 · 전달 사항', '하루 기록', S.labels.note || '아이 기록'].map(v => ({v, s:1})));
-  const head = r.length;
-  ks.forEach((k, i) => { const z = i % 2 ? 7 : 0, d = days[k] || {};
-    const work = (S.events[k] || []).filter(x => x.c === 'w').map(x => `${x.done ? '✔' : '□'} ${x.t}`).join('\n');
-    const notes = []; R.forEach(({n, name}) => (S.notes[n] || []).forEach(x => { if (x.d === k) notes.push(`${n} ${name.trim()}: ${x.t}`); }));
-    const cells = [work, d.meet || '', d.day || '', notes.join('\n')];
-    h[r.length] = xlH(Math.max(2, ...cells.map((c, ci) => XL.lines(c, w[ci + 1] - 2))), 44);
-    r.push([{v:dd(k), s:12}].concat(cells.map(c => ({v:c, s:z})))); });
-  h[r.length] = 20; r.push([{v:'✔ 다 한 업무 · □ 남은 업무 · 개굴칠판 © 2026 정예훈(개굴정)', s:11}]);
-  // 아이별: 아이마다 지금까지의 기록을 한 줄에
-  const kw = [7, 13, 9, 120], K = xlTop(`${cfg().sub} 교무수첩 · 아이별 기록`, ['아이마다 지금까지 적은 기록을 날짜순으로 모았어요'], 4), kr = K.rows, kh = K.heights;
-  kh[kr.length] = 30; kr.push(['번호', '이름', '기록 수', S.labels.note || '아이 기록'].map(v => ({v, s:1})));
-  const khead = kr.length;
-  R.forEach(({n, name}, i) => { const list = (S.notes[n] || []).slice().sort((a, b) => a.d < b.d ? -1 : 1).map(x => `${x.d.slice(5).replace('-', '/')}  ${x.t}`), c = i % 2 ? 8 : 5, b = i % 2 ? 7 : 0;
-    kh[kr.length] = xlH(XL.lines(list.join('\n'), kw[3] - 2), 26);
-    kr.push([{v:n, s:c}, {v:name.trim(), s:c}, {v:list.length || '', s:c}, {v:list.join('\n'), s:b}]); });
-  XL.save(`개굴칠판_교무수첩_${dkey()}.xlsx`, [
-    {name:'날짜별', widths:w, rows:r, heights:h, merges:T.merges, landscape:true, freeze:[1, head]},
-    {name:'아이별', widths:kw, rows:kr, heights:kh, merges:K.merges, landscape:true, freeze:[2, khead]}]);
-};
+// 엑셀로 저장: 어느 쪽에서 눌러도 지금 보고 있는 주를 파일 하나로 (주간 기록 + 학생별)
+$('nbXlsx').onclick = () => nbWeekXlsx();
 // 다른 기기에서 바뀐 기록이 오면 다시 그림 (적는 중이면 기다림)
 { const _raNb = renderAll; renderAll = function(){ _raNb(); if (NB.open){ const a = document.activeElement; if (!a || !$('nbBox').contains(a) || a.tagName === 'BUTTON') renderNb(); } }; }
 
@@ -3470,13 +3460,13 @@ function renderNbWeek(){
     <div class="rp-sum">${esc(W.sum)}</div>
     <table class="rp-t rp-form"><thead><tr><th>구분</th>${W.cols.map((c, i) => `<th><button type="button" class="rp-day" data-go="${dkey(W.days[i])}" title="이 날 수첩 열기">${c.head}</button></th>`).join('')}</tr></thead>
     <tbody>${wkRows().map(([key, label]) => `<tr class="r-${key}"><th>${esc(label)}</th>${W.cols.map(c => `<td>${c[key].map(esc).join('<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table>
-    <h3>아이별</h3>
+    <h3>학생별</h3>
     <table class="rp-t rp-kids2"><thead><tr><th>번호</th><th>이름</th><th>출결</th><th>${esc(S.labels.check || '확인')}</th><th>이번 주 별</th><th>모은 별</th><th>${esc(S.labels.note || '아이 기록')}</th></tr></thead>
     <tbody>${W.kids.map(k => `<tr class="${k.notes.length || k.att.length ? 'rp-hl' : ''}"><th>${k.n}</th><th>${esc(k.name)}</th><td>${k.att.join('<br>') || '<small>모두 출석</small>'}</td><td class="rp-c">${k.chk}</td><td class="rp-c">${k.star ? (k.star > 0 ? '+' : '') + k.star : ''}</td><td class="rp-c">${k.total || ''}</td><td>${k.notes.map(esc).join('<br>')}</td></tr>`).join('')}</tbody></table>
     <p class="rp-foot">날짜를 누르면 그날 수첩이 열려요. · ${new Date().toLocaleString('ko-KR')} 출력 · 개굴칠판 © 2026 정예훈(개굴정)</p></div>`;
   $('nbBox').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { NB.d = new Date(b.dataset.go + 'T12:00'); NB.tab = 'day'; renderNb(); });
 }
-// 엑셀 양식: 교무수첩 주간 한 장(가로 A4, 요일이 가로줄) + 아이별
+// 엑셀 양식: 교무수첩 주간 한 장(가로 A4, 요일이 가로줄) + 학생별
 const xlH = (n, min) => Math.min(400, Math.max(min, 12 + 16.5 * Math.max(1, n)));
 function xlTop(title, lines, n){ // 제목 띠 + 안내 줄들 + 빈 줄
   const fillRow = (v, s) => [{v, s}].concat(Array.from({length:n - 1}, () => ({v:'', s}))), rows = [fillRow(title, 2)], heights = {0:42}, last = String.fromCharCode(64 + n), merges = [`A1:${last}1`];
@@ -3492,7 +3482,7 @@ function xlKidSheet(title, lines, kids){
     kh[k.length] = xlH(Math.max(x.att.length, XL.lines(x.notes.join('\n'), kw[6] - 2)), 26);
     k.push([{v:x.n, s:c}, {v:x.name, s:c}, {v:x.att.join('\n') || '모두 출석', s:c}, {v:x.chk, s:c}, {v:x.star ? (x.star > 0 ? '+' : '') + x.star : '', s:c}, {v:x.total || '', s:c}, {v:x.notes.join('\n'), s:b}]); });
   kh[k.length] = 20; k.push([{v:'노란 줄: 출결이나 기록이 있는 아이 · 개굴칠판 © 2026 정예훈(개굴정)', s:11}]);
-  return {name:'아이별', widths:kw, rows:k, heights:kh, merges:T.merges, landscape:true, freeze:[2, head]};
+  return {name:'학생별', widths:kw, rows:k, heights:kh, merges:T.merges, landscape:true, freeze:[2, head]};
 }
 function nbWeekSheets(){
   const W = weekData(NB.d), rows = wkRows(), wd = [15, 31, 31, 31, 31, 31];
@@ -3506,14 +3496,15 @@ function nbWeekSheets(){
   heights[r.length] = 20; r.push([{v:'✔ 다 한 업무 · □ 남은 업무 · 개굴칠판 © 2026 정예훈(개굴정)', s:11}]);
   return {first:W.days[0], sheets:[
     {name:'주간 기록', widths:wd, rows:r, heights, merges:T.merges, landscape:true, onePage:true, freeze:[1, head]},
-    xlKidSheet(`${cfg().sub} 교무수첩 · 아이별 주간 기록`, [`기간  ${W.span}`], W.kids)]};
+    xlKidSheet(`${cfg().sub} 교무수첩 · 학생별 주간 기록`, [`기간  ${W.span}`], W.kids)]};
 }
-function nbWeekXlsx(){ const x = nbWeekSheets(); XL.save(`개굴칠판_교무수첩_주간_${dkey(x.first)}.xlsx`, x.sheets); }
+function nbWeekXlsx(){ const x = nbWeekSheets(), f = x.first, l = new Date(f); l.setDate(f.getDate() + 4);
+  XL.save(`교무수첩_${f.getFullYear()}년_${p2(f.getMonth() + 1)}월${p2(f.getDate())}일~${p2(l.getMonth() + 1)}월${p2(l.getDate())}일.xlsx`, x.sheets); }
 document.querySelectorAll('[data-nbt]').forEach(b => b.onclick = () => { NB.tab = b.dataset.nbt; renderNb(); });
-$('nbPrint').onclick = () => { document.body.classList.add('printing-nb'); window.print(); };
+$('nbPrint').onclick = () => { if (NB.tab !== 'week'){ NB.tab = 'week'; renderNb(); } document.body.classList.add('printing-nb'); setTimeout(() => window.print(), 60); };
 window.addEventListener('afterprint', () => document.body.classList.remove('printing-nb'));
 // 관리 메뉴의 '주간 기록'은 교무수첩의 주간 쪽으로
-$('repBtn').onclick = () => openNb(true, 'week');
+$('repBtn').hidden = true;
 </script>
 </body>
 </html>
