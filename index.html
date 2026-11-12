@@ -965,6 +965,10 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 .sw-panel .b,.hg-side .b{font-size:max(13px,min(3.8cqw,6.8cqh)); padding:.35em 1.1em}
 .hg-side .tp{font-size:max(12px,min(3.2cqw,5.8cqh)); padding:.2em .6em}
 .nz-msg{font-size:max(14px,min(5.6cqw,10cqh))}
+
+.st-help{margin:0; padding:.55em .9em; background:#e8f6f0; color:#0f6b50; border-radius:10px; font-size:15px}
+.st-edit .st-seat.pick{background:#fff3c4; border:3px solid #f0b400; transform:scale(1.04); box-shadow:0 6px 16px rgba(240,180,0,.35)}
+.st-edit .st-seat{transition:transform .12s}
 </style>
 </head>
 <body>
@@ -1320,15 +1324,17 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
       <div class="st-row"><span>줄 (앞뒤)</span><button class="mini" type="button" data-st="r-">−</button><b id="stR">5</b><button class="mini" type="button" data-st="r+">+</button>
         <span>칸 (옆으로)</span><button class="mini" type="button" data-st="c-">−</button><b id="stC">6</b><button class="mini" type="button" data-st="c+">+</button>
         <span class="muted" id="stCount"></span></div>
+      <p class="st-help" id="stHelp"></p>
       <div class="st-row st-modes"><span>자리를 누르면</span>
-        <button class="mini on" type="button" data-sm="off">빈자리로 (책상 없음)</button>
+        <button class="mini on" type="button" data-sm="move">직접 앉히기</button>
+        <button class="mini" type="button" data-sm="off">빈자리로 (책상 없음)</button>
         <button class="mini" type="button" data-sm="fix">학생 고정</button>
         <select class="inp" id="stFixKid" aria-label="고정할 학생"></select></div>
       <div class="st-desk">교탁</div>
       <div class="st-grid st-edit" id="stEditGrid"></div>
       <div class="st-row st-avoid"><span>떨어져 앉기</span><select class="inp" id="stAvA" aria-label="학생 1"></select><select class="inp" id="stAvB" aria-label="학생 2"></select><button class="mini" id="stAvAdd" type="button">추가</button></div>
       <div class="st-chips" id="stAvList"></div>
-      <p class="muted">떨어져 앉기에 넣은 두 학생은 앞뒤·옆자리에 붙지 않게 섞어요. 고정한 학생은 자리를 바꿔도 그 자리에 그대로 있어요.</p>
+      <p class="muted"><b>직접 앉히기</b>로 정한 자리는 그대로 칠판에 보여요. '자리 바꾸기'를 누르면 고정 학생만 남기고 다시 섞어요.<br>떨어져 앉기에 넣은 두 학생은 앞뒤·옆자리에 붙지 않게 섞어요. 고정한 학생은 자리를 바꿔도 그 자리에 그대로 있어요.</p>
       <div class="btns" style="justify-content:flex-start"><button class="b" id="stOrder" type="button">번호 순서대로 앉히기</button><button class="b go" id="stDone" type="button">다 했어요</button></div>
     </div>
   </div>
@@ -3921,7 +3927,7 @@ $('tmZero').onclick = () => { const b = $('tmZero'); if (!b.dataset.ok){ b.datas
   delete b.dataset.ok; b.textContent = '점수 모두 0으로'; tmData().score = []; save(); renderTeams(); };
 
 /* ================= 자리 바꾸기 ================= */
-let stMode = 'off', stAnim = 0;
+let stMode = 'move', stAnim = 0, stPick = null;
 function stData(){ const s = S.seat = S.seat || {}; s.r = Math.max(1, Math.min(8, s.r || 5)); s.c = Math.max(1, Math.min(10, s.c || 6)); s.off = s.off || []; s.fix = s.fix || {}; s.avoid = s.avoid || []; s.map = s.map || []; return s; }
 const stName = n => { const x = sorted().find(r => r.n === n); return x ? x.name.trim() : ''; };
 function stSeats(){ const s = stData(), out = []; for (let i = 0; i < s.r * s.c; i++) if (!s.off.includes(i)) out.push(i); return out; }
@@ -3971,6 +3977,7 @@ function renderSeatDlg(){
   $('stR').textContent = s.r; $('stC').textContent = s.c;
   $('stCount').textContent = `자리 ${stSeats().length}개 · 학생 ${R.length}명`;
   document.querySelectorAll('[data-sm]').forEach(b => b.classList.toggle('on', b.dataset.sm === stMode)); $('stFixKid').hidden = stMode !== 'fix';
+  $('stHelp').textContent = {move:stPick == null ? '바꿀 학생의 자리를 누르고, 옮겨 갈 자리를 누르세요. 두 자리가 서로 바뀌어요. 빈 자리를 누르면 그리로 옮겨 앉아요.' : '이제 옮겨 갈 자리를 누르세요. 같은 자리를 다시 누르면 취소돼요.', off:'누르는 자리가 빈자리(책상 없음)가 되거나 다시 자리가 돼요.', fix:'학생을 고른 뒤 자리를 누르면 그 학생은 섞어도 늘 그 자리에 앉아요.'}[stMode];
   const opt = (sel, v) => R.map(({n, name}) => `<option value="${n}" ${v === n ? 'selected' : ''}>${n} ${esc(name.trim())}</option>`).join('');
   const fk = +$('stFixKid').value || (R[0] || {}).n; $('stFixKid').innerHTML = opt(0, fk);
   ['stAvA', 'stAvB'].forEach((id, j) => { const v = +$(id).value || (R[j] || {}).n; $(id).innerHTML = opt(0, v); });
@@ -3978,22 +3985,44 @@ function renderSeatDlg(){
   let h = ''; for (let i = 0; i < s.r * s.c; i++){ const off = s.off.includes(i), f = s.fix[i];
     h += `<button type="button" class="st-seat ${off ? 'off' : ''} ${f ? 'fix' : ''}" data-si="${i}">${off ? '빈자리' : f ? `<b>${f}</b><span>${esc(stName(f))}</span><em>고정</em>` : map[i] ? `<b>${map[i]}</b><span>${esc(stName(map[i]))}</span>` : ''}</button>`; }
   g.innerHTML = h;
+  if (stPick != null) { const el = g.querySelector(`[data-si="${stPick}"]`); if (el) el.classList.add('pick'); }
   g.querySelectorAll('[data-si]').forEach(b => b.onclick = () => { const i = +b.dataset.si, s2 = stData();
+    if (stMode === 'move'){
+      if (s2.off.includes(i)) return;
+      if (s2.fix[i]) return bubble('고정된 자리예요. 학생 고정을 풀고 옮겨 주세요', '', 3000);
+      if (stPick == null){ if (!s2.map.length) s2.map = stFill(); stPick = i; return renderSeatDlg(); }
+      if (stPick !== i){ s2.map = s2.map.slice(); [s2.map[stPick], s2.map[i]] = [s2.map[i], s2.map[stPick]]; save(); renderSeat(); }
+      stPick = null; return renderSeatDlg();
+    }
     if (stMode === 'off'){ if (s2.off.includes(i)) s2.off = s2.off.filter(x => x !== i); else { s2.off = s2.off.concat(i); delete s2.fix[i]; } }
     else { const n = +$('stFixKid').value; if (s2.off.includes(i)) return;
       if (s2.fix[i] === n) delete s2.fix[i]; else { Object.keys(s2.fix).forEach(k => { if (s2.fix[k] === n) delete s2.fix[k]; }); s2.fix[i] = n; } }
-    s2.fix = Object.assign({}, s2.fix); s2.map = []; save(); renderSeatDlg(); renderSeat(); });
+    s2.fix = Object.assign({}, s2.fix); stRepair(); save(); renderSeatDlg(); renderSeat(); });
   $('stAvList').innerHTML = s.avoid.length ? s.avoid.map(([a, b], i) => `<span class="st-chip">${a} ${esc(stName(a))} ↔ ${b} ${esc(stName(b))}<button type="button" data-avrm="${i}" aria-label="빼기">✕</button></span>`).join('') : '<span class="muted">아직 없어요</span>';
   $('stAvList').querySelectorAll('[data-avrm]').forEach(b => b.onclick = () => { const s2 = stData(); s2.avoid = s2.avoid.filter((_, j) => j !== +b.dataset.avrm); save(); renderSeatDlg(); });
 }
-function stSize(k, d){ const s = stData(); if (k === 'r') s.r = Math.max(1, Math.min(8, s.r + d)); else s.c = Math.max(1, Math.min(10, s.c + d));
-  const N = s.r * s.c; s.off = s.off.filter(i => i < N); Object.keys(s.fix).forEach(i => { if (+i >= N) delete s.fix[i]; }); s.map = []; save(); renderSeatDlg(); renderSeat(); }
+function stSize(k, d){ const s = stData(), oc = s.c, cur = s.map.length ? s.map : stFill();
+  if (k === 'r') s.r = Math.max(1, Math.min(8, s.r + d)); else s.c = Math.max(1, Math.min(10, s.c + d));
+  // 줄·칸을 바꿔도 앉은 자리(앞에서 몇째 줄, 몇째 칸)는 그대로
+  const mv = i => { const r = Math.floor(i / oc), c = i % oc; return r < s.r && c < s.c ? r * s.c + c : -1; };
+  const map = []; cur.forEach((n, i) => { const j = mv(i); if (n && j >= 0) map[j] = n; });
+  s.off = s.off.map(mv).filter(j => j >= 0); const fix = {}; Object.entries(s.fix).forEach(([i, n]) => { const j = mv(+i); if (j >= 0) fix[j] = n; }); s.fix = fix;
+  s.map = map; stRepair(); save(); renderSeatDlg(); renderSeat(); }
+// 자리표 바로잡기: 빈자리에 앉은 학생 빼기, 고정 학생은 제자리로, 자리 없는 학생은 빈 자리에
+function stRepair(){
+  const s = stData(), N = s.r * s.c, kids = sorted().map(x => x.n), map = (s.map.length ? s.map : stFill()).slice(0, N);
+  for (let i = 0; i < N; i++) if (s.off.includes(i) || !kids.includes(map[i])) map[i] = undefined;
+  Object.entries(s.fix).forEach(([i, n]) => { const j = map.indexOf(n); if (j >= 0 && j !== +i){ map[j] = map[+i]; } map[+i] = n; });
+  const seen = new Set(); for (let i = 0; i < N; i++){ if (map[i] && seen.has(map[i])) map[i] = undefined; if (map[i]) seen.add(map[i]); }
+  kids.filter(n => !seen.has(n)).forEach(n => { for (let i = 0; i < N; i++) if (!map[i] && !s.off.includes(i)){ map[i] = n; break; } });
+  s.map = map;
+}
 document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { const v = b.dataset.st; stSize(v[0], v[1] === '+' ? 1 : -1); });
-document.querySelectorAll('[data-sm]').forEach(b => b.onclick = () => { stMode = b.dataset.sm; renderSeatDlg(); });
+document.querySelectorAll('[data-sm]').forEach(b => b.onclick = () => { stMode = b.dataset.sm; stPick = null; renderSeatDlg(); });
 $('stAvAdd').onclick = () => { const a = +$('stAvA').value, b = +$('stAvB').value, s = stData(); if (!a || !b || a === b) return;
   if (!s.avoid.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) s.avoid = s.avoid.concat([[a, b]]); save(); renderSeatDlg(); };
 $('stOrder').onclick = () => { stData().map = []; save(); renderSeatDlg(); renderSeat(); };
-const stOpen = o => { $('stDlg').hidden = !o; if (o) renderSeatDlg(); };
+const stOpen = o => { $('stDlg').hidden = !o; stPick = null; if (o){ stRepair(); renderSeatDlg(); } };
 $('stGear').onclick = () => stOpen(true); $('stClose').onclick = $('stDone').onclick = () => stOpen(false);
 $('stDlg').addEventListener('click', e => { if (e.target === $('stDlg')) stOpen(false); });
 
