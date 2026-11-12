@@ -969,6 +969,9 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 .st-help{margin:0; padding:.55em .9em; background:#e8f6f0; color:#0f6b50; border-radius:10px; font-size:15px}
 .st-edit .st-seat.pick{background:#fff3c4; border:3px solid #f0b400; transform:scale(1.04); box-shadow:0 6px 16px rgba(240,180,0,.35)}
 .st-edit .st-seat{transition:transform .12s}
+
+.hg-set{display:flex; align-items:center; gap:.3em; flex-wrap:wrap; font-size:max(12px,min(3cqw,5.4cqh))}
+.hg-set .inp{width:3.4em; padding:.2em .3em; text-align:center; font-size:1em}
 </style>
 </head>
 <body>
@@ -1088,6 +1091,7 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
         <div class="hg-side">
           <div class="hg-left" id="hgLeft">03:00</div>
           <div class="t-pre"><button class="tp" type="button" data-hg="1">1분</button><button class="tp" type="button" data-hg="3">3분</button><button class="tp" type="button" data-hg="5">5분</button><button class="tp" type="button" data-hg="10">10분</button></div>
+          <div class="t-set hg-set"><input class="inp" id="hgMin" type="number" min="0" max="99" value="3" aria-label="모래시계 분">분 <input class="inp" id="hgSec" type="number" min="0" max="59" value="0" aria-label="모래시계 초">초 <button class="mini" id="hgSetBtn" type="button">맞추기</button></div>
           <div class="t-ctl"><button class="b go" id="hgStart" type="button">시작</button><button class="b" id="hgReset" type="button">처음</button></div>
         </div>
       </div>
@@ -4293,12 +4297,29 @@ function widgetCmd(c, raw){
     const sec = readTime(c);
     if (/처음|초기화|다시/.test(c)){ $('hgReset').click(); return R('모래시계를 처음으로 돌렸어요'); }
     if (/멈|정지|그만/.test(c)){ if (HG.run) $('hgStart').click(); return R('모래시계를 멈췄어요'); }
-    if (sec > 0){ clearInterval(HG.id); HG.run = false; HG.total = HG.left = sec * 1000; document.querySelectorAll('[data-hg]').forEach(x => x.classList.toggle('on', +x.dataset.hg * 60 === sec)); hgDraw(); }
+    if (sec > 0) hgSetTime(sec);
     if (!HG.run) $('hgStart').click();
     const m = Math.floor(HG.total / 60000), s2 = Math.round(HG.total / 1000) % 60;
     return R(`${m ? m + '분 ' : ''}${s2 ? s2 + '초 ' : ''}모래시계를 시작할게요`);
   }
 }
+
+/* 모래시계: 분·초 직접 맞추기 */
+function hgSetTime(sec, keepBtns){
+  sec = Math.max(1, Math.min(99 * 60 + 59, Math.round(sec)));
+  clearInterval(HG.id); HG.run = false; HG.total = HG.left = sec * 1000;
+  $('hgMin').value = Math.floor(sec / 60); $('hgSec').value = sec % 60;
+  if (!keepBtns) document.querySelectorAll('[data-hg]').forEach(x => x.classList.toggle('on', +x.dataset.hg * 60 === sec));
+  $('hgStart').textContent = '시작'; $('hgStart').classList.add('go'); hgDraw();
+  try{ localStorage.setItem('jgg-hg', String(sec)); }catch(e){}
+}
+const hgFromInputs = () => (Math.max(0, +$('hgMin').value || 0) * 60) + Math.max(0, Math.min(59, +$('hgSec').value || 0));
+$('hgSetBtn').onclick = () => { const s = hgFromInputs(); if (s > 0) hgSetTime(s); };
+['hgMin', 'hgSec'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('hgSetBtn').click(); }));
+document.querySelectorAll('[data-hg]').forEach(b => b.onclick = () => hgSetTime(+b.dataset.hg * 60));
+// 시작을 누를 때 칸에 적어 둔 시간이 지금 맞춘 시간과 다르면 그 시간으로
+{ const _st = $('hgStart').onclick; $('hgStart').onclick = () => { if (!HG.run && HG.left === HG.total){ const s = hgFromInputs(); if (s > 0 && s * 1000 !== HG.total) hgSetTime(s); } _st(); }; }
+try{ const v = +localStorage.getItem('jgg-hg'); if (v > 0) hgSetTime(v); }catch(e){}
 </script>
 </body>
 </html>
