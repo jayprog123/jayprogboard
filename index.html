@@ -972,6 +972,25 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 
 .hg-set{display:flex; align-items:center; gap:.3em; flex-wrap:wrap; font-size:max(12px,min(3cqw,5.4cqh))}
 .hg-set .inp{width:3.4em; padding:.2em .3em; text-align:center; font-size:1em}
+/* 시정표 고치기 */
+.now-sch{position:absolute; top:clamp(8px,.7vw,14px); right:calc(clamp(10px,.9vw,18px) + 4.2em); z-index:2; font-size:clamp(12px,.8vw,15px); opacity:.55}
+.c-now:hover .now-sch,.now-sch:focus-visible{opacity:1}
+.cell.big .now-sch{display:none}
+#schDlg{position:fixed; inset:0; z-index:48; background:rgba(28,43,37,.45); display:flex; align-items:center; justify-content:center; padding:16px}
+.sch-dlg{width:min(860px,96vw); max-height:94vh; gap:12px}
+.sch-wrap{flex:1; min-height:0; overflow:auto}
+.sch-t{width:100%; border-collapse:collapse; font-size:16px}
+.sch-t th{font-weight:600; color:var(--ink-2); padding:.4em; border-bottom:2px solid var(--line); text-align:left}
+.sch-t td{padding:.3em .3em; border-bottom:1px solid var(--line-soft)}
+.sch-t td.c,.sch-t th:nth-child(n+4){text-align:center}
+.sch-t input.inp{width:100%; font-size:16px; padding:.35em .5em}
+.sch-t td:first-child{width:24%} .sch-t td:nth-child(2),.sch-t td:nth-child(3){width:17%}
+.sch-t input[type=checkbox]{width:1.3em; height:1.3em}
+.sch-err{color:#d33b2f; min-height:1.2em}
+.sch-dlg .b{font-size:16px; padding:.5em 1.4em}
+/* 1인 1역: 글자를 칸에 맞춰 크게 */
+.c-clean #cleanView{flex:1; min-height:0; overflow:hidden; align-content:center}
+.c-clean .clean-row{font-size:1em; padding:.32em .15em}
 </style>
 </head>
 <body>
@@ -1032,6 +1051,7 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 <div class="board">
 
   <section class="cell c-now" id="cNow">
+    <button class="mini now-sch" id="schBtn" type="button">시정표 고치기</button>
     <button class="mini now-big" type="button" data-big>크게</button>
     <div class="now-wrap">
       <div class="now-left">
@@ -1347,6 +1367,15 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
   <b>화면 배치 바꾸기</b><span>칸마다 위젯을 고르거나 ◀ ▶로 옮겨요. 가운데 시계와 달력은 그대로예요.</span>
   <button class="mini" id="layReset" type="button">처음 배치로</button><button class="mini go" id="layDone" type="button">다 했어요</button>
 </div>
+<div id="schDlg" class="dlg-wrap" hidden>
+  <div class="sheet-dlg sch-dlg" role="dialog" aria-modal="true" aria-labelledby="schTitle">
+    <div class="roster-head"><span id="schTitle">시정표 고치기</span><span class="sp"></span><button class="mini" id="schClose" type="button">닫기</button></div>
+    <p class="st-help">교시 이름과 시간을 고치고, 그 교시가 있는 요일에 체크해요. 예) 6교시가 화·목에만 있으면 화·목만 체크해요.</p>
+    <div class="sch-wrap"><table class="sch-t"><thead><tr><th>이름</th><th>시작</th><th>끝</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th></th></tr></thead><tbody id="schBody"></tbody></table></div>
+    <div class="sch-err" id="schErr"></div>
+    <div class="btns" style="justify-content:flex-start"><button class="b" id="schAdd" type="button">줄 더하기</button><button class="b" id="schDef" type="button">처음 시정표로</button><span class="sp"></span><button class="b go" id="schSave" type="button">저장</button></div>
+  </div>
+</div>
 <div id="sheetDlg" class="dlg-wrap" hidden>
   <div class="sheet-dlg" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
     <div class="roster-head"><span id="sheetTitle">출결·확인 기록표</span><span class="sp"></span><button class="mini" id="sheetClose" type="button">닫기</button></div>
@@ -1624,16 +1653,18 @@ const planOf = (n, d = viewDay()) => ((S.plan[dkey(d)] || {})[n] || '').trim();
 function activity(now){
   const day = now.getDay(), mins = now.getHours()*60 + now.getMinutes();
   if (day === 0 || day === 6) return {text:'쉬는 날', idx:-1, list:[], mins};
-  const list = todayList(day), short = day === 1 || day === 5;
+  const list = todayList(day);
+  if (!list.length) return {text:'쉬는 날', idx:-1, list:[], mins};
   const idx = list.findIndex(r => mins >= toMin(r.s) && mins < toMin(r.e));
-  const ready = list.some(r => !r.noWarn && mins === toMin(r.s) - 1);
+  // 1분 전 알림: 교시 바로 앞이 다른 교시로 이어지지 않을 때만
+  const ready = list.some((r, i) => /교시/.test(r.n) && mins === toMin(r.s) - 1 && !(i > 0 && /교시/.test(list[i - 1].n) && list[i - 1].e === r.s));
+  const last = list[list.length - 1], prev = list.filter(r => toMin(r.e) <= mins).pop(), next = list.find(r => toMin(r.s) > mins);
   let text;
   if (ready) text = '수업 준비해요!';
   else if (idx >= 0) text = list[idx].n;
-  else if (mins < toMin('08:40')) text = '곧 시작해요';
-  else if (short && mins >= toMin('12:50')) text = '점심 먹고 하교';
-  else if (!short && mins >= toMin('12:50') && mins < toMin('13:00')) text = '청소 시간';
-  else if (!short && mins >= toMin('13:40')) text = '하교 시간';
+  else if (mins < toMin(list[0].s)) text = '곧 시작해요';
+  else if (mins >= toMin(last.e)) text = /점심/.test(last.n) ? '점심 먹고 하교' : '하교 시간';
+  else if (prev && /점심/.test(prev.n) && next) text = '청소 시간';
   else text = '쉬는 시간';
   const plan = idx >= 0 && !ready ? planOf(list[idx].n, now) : '';
   return {text, plan, idx, list, mins, ready};
@@ -4320,6 +4351,57 @@ document.querySelectorAll('[data-hg]').forEach(b => b.onclick = () => hgSetTime(
 // 시작을 누를 때 칸에 적어 둔 시간이 지금 맞춘 시간과 다르면 그 시간으로
 { const _st = $('hgStart').onclick; $('hgStart').onclick = () => { if (!HG.run && HG.left === HG.total){ const s = hgFromInputs(); if (s > 0 && s * 1000 !== HG.total) hgSetTime(s); } _st(); }; }
 try{ const v = +localStorage.getItem('jgg-hg'); if (v > 0) hgSetTime(v); }catch(e){}
+/* ===== 시정표 고치기 (동기화됨) ===== */
+const SCHED_DEF = JSON.parse(JSON.stringify(SCHEDULE));
+function schedValid(a){ return Array.isArray(a) && a.length && a.every(r => r && /^\d\d:\d\d$/.test(r.s) && /^\d\d:\d\d$/.test(r.e) && String(r.n || '').trim()); }
+function applySched(){
+  const src = schedValid(S.sched) ? S.sched : SCHED_DEF;
+  SCHEDULE.length = 0; src.forEach(r => SCHEDULE.push(Object.assign({}, r)));
+}
+let schRows = [];
+const DOWS = [1, 2, 3, 4, 5];
+function renderSchDlg(){
+  $('schBody').innerHTML = schRows.map((r, i) => `<tr>
+    <td><input class="inp" data-sf="n" data-si="${i}" value="${esc(r.n)}" aria-label="이름"></td>
+    <td><input class="inp" type="time" data-sf="s" data-si="${i}" value="${r.s}" aria-label="시작"></td>
+    <td><input class="inp" type="time" data-sf="e" data-si="${i}" value="${r.e}" aria-label="끝"></td>
+    ${DOWS.map(d => `<td class="c"><input type="checkbox" data-sd="${d}" data-si="${i}" ${(r.skipDays || []).includes(d) ? '' : 'checked'} aria-label="${'일월화수목금토'[d]}요일"></td>`).join('')}
+    <td><button class="mini" type="button" data-sx="${i}">지우기</button></td></tr>`).join('');
+  $('schBody').querySelectorAll('[data-sf]').forEach(inp => inp.oninput = () => { schRows[+inp.dataset.si][inp.dataset.sf] = inp.value; });
+  $('schBody').querySelectorAll('[data-sd]').forEach(c => c.onchange = () => { const r = schRows[+c.dataset.si], d = +c.dataset.sd; const sk = new Set(r.skipDays || []); if (c.checked) sk.delete(d); else sk.add(d); r.skipDays = [...sk].sort(); if (!r.skipDays.length) delete r.skipDays; });
+  $('schBody').querySelectorAll('[data-sx]').forEach(b => b.onclick = () => { schRows.splice(+b.dataset.sx, 1); renderSchDlg(); });
+  $('schErr').textContent = '';
+}
+function schOpen(o){ $('schDlg').hidden = !o; if (o){ schRows = JSON.parse(JSON.stringify(SCHEDULE)).map(r => { delete r.noWarn; return r; }); renderSchDlg(); } }
+$('schBtn').onclick = () => schOpen(true);
+$('schClose').onclick = () => schOpen(false);
+$('schDlg').addEventListener('click', e => { if (e.target === $('schDlg')) schOpen(false); });
+$('schAdd').onclick = () => {
+  const last = schRows[schRows.length - 1], add = (t, m) => { const x = toMin(t) + m; return `${String(Math.floor(x / 60) % 24).padStart(2, '0')}:${String(x % 60).padStart(2, '0')}`; };
+  const s = last ? add(last.e, 10) : '09:00', n = (schRows.filter(r => /^\d+교시$/.test(r.n)).map(r => parseInt(r.n)).sort((a, b) => b - a)[0] || 0) + 1;
+  schRows.push({n:`${n}교시`, s, e:add(s, 40)}); renderSchDlg();
+  const ins = $('schBody').querySelectorAll('tr'); ins[ins.length - 1].querySelector('input').focus();
+};
+$('schDef').onclick = () => { schRows = JSON.parse(JSON.stringify(SCHED_DEF)).map(r => { delete r.noWarn; return r; }); renderSchDlg(); };
+$('schSave').onclick = () => {
+  const rows = schRows.map(r => Object.assign({}, r, {n:String(r.n || '').trim()}));
+  const bad = rows.findIndex(r => !r.n || !/^\d\d:\d\d$/.test(r.s) || !/^\d\d:\d\d$/.test(r.e) || toMin(r.e) <= toMin(r.s));
+  if (!rows.length) return $('schErr').textContent = '시정표가 비어 있어요. 줄을 하나 넘게 넣어 주세요.';
+  if (bad >= 0) return $('schErr').textContent = `${bad + 1}째 줄을 확인해 주세요. 이름이 있어야 하고, 끝 시간이 시작 시간보다 늦어야 해요.`;
+  const names = rows.map(r => r.n); if (new Set(names).size !== names.length) return $('schErr').textContent = '같은 이름이 두 번 있어요. 이름을 서로 다르게 해 주세요.';
+  rows.sort((a, b) => toMin(a.s) - toMin(b.s));
+  S.sched = JSON.stringify(rows) === JSON.stringify(SCHED_DEF.map(r => { const x = Object.assign({}, r); delete x.noWarn; return x; })) ? undefined : rows;
+  if (!S.sched) delete S.sched;
+  save(); applySched(); renderPeriods(); tick(); schOpen(false); bubble('시정표를 바꿨어요', '', 2500);
+};
+// 다른 기기에서 시정표가 바뀌어 오면 다시 그림
+{ const _raS = renderAll; renderAll = function(){ applySched(); _raS(); }; }
+applySched(); renderPeriods(); tick();
+
+/* ===== 1인 1역: 글자를 칸에 꽉 차게 ===== */
+{ const _rc = renderClean; renderClean = function(){ _rc(); requestAnimationFrame(() => fitBox($('cleanView'), 44, 12)); }; }
+if (window.ResizeObserver) new ResizeObserver(() => fitBox($('cleanView'), 44, 12)).observe($('cleanView'));
+renderClean();
 </script>
 </body>
 </html>
