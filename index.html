@@ -4049,7 +4049,8 @@ $('wdClose').onclick = () => { $('wdSet').hidden = true; $('wdMain').hidden = fa
 /* ================= 디데이 ================= */
 const ddList = () => (S.dday || []).slice().sort((a, b) => a.d < b.d ? -1 : 1);
 function ddDiff(k){ return Math.round((new Date(k + 'T12:00') - offDay(0)) / 864e5); }
-function ddSchool(k){ let n = 0; for (let o = 1; o < ddDiff(k); o++){ const d = offDay(o), dk = dkey(d); if ([0, 6].includes(d.getDay()) || (S.events[dk] || []).some(x => x.h)) continue; n++; } return n; }
+// 오늘도 학교 가는 날이면 넣어서 셈 (그날 당일은 빼고)
+function ddSchool(k){ let n = 0; for (let o = 0; o < ddDiff(k); o++){ const d = offDay(o), dk = dkey(d); if ([0, 6].includes(d.getDay()) || (S.events[dk] || []).some(x => x.h)) continue; n++; } return n; }
 function renderDday(){
   const L = ddList().filter(x => ddDiff(x.d) >= 0), lab = n => n === 0 ? 'D-DAY' : 'D-' + n;
   if (!L.length){ $('ddMain').innerHTML = `<div class="dd-empty">기다리는 날을 넣어 보세요<br><small>'고치기'를 누르면 달력의 학교 일정에서 고를 수 있어요</small></div>`; $('ddList').innerHTML = ''; }
