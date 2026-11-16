@@ -991,6 +991,30 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 /* 1인 1역: 글자를 칸에 맞춰 크게 */
 .c-clean #cleanView{flex:1; min-height:0; overflow:hidden; align-content:center}
 .c-clean .clean-row{font-size:1em; padding:.32em .15em}
+/* 시간표 PDF로 넣기 */
+#ttDlg{position:fixed; inset:0; z-index:48; background:rgba(28,43,37,.45); display:flex; align-items:center; justify-content:center; padding:16px}
+.tt-dlg{width:min(1100px,96vw); max-height:94vh; height:auto; container-type:normal; gap:12px; overflow:hidden}
+.tt-dlg .b{font-size:16px; padding:.5em 1.4em}
+.tt-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.tt-file{cursor:pointer}
+.tt-name{color:var(--ink-2); font-size:15px}
+.tt-opts{display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px; font-size:16px}
+.tt-opts label{display:flex; align-items:center; gap:.35em; cursor:pointer}
+.tt-opts small{color:var(--ink-3)}
+.tt-lab{font-weight:600; color:var(--ink-2)}
+.tt-over{margin-left:auto}
+.tt-sum{font-size:16px; line-height:1.5}
+.tt-sum b{color:var(--accent,#2f7a5f)}
+.tt-sum .warn{color:#b26b00}
+.tt-wrap{flex:1; min-height:120px; max-height:46vh; overflow:auto; border:1px solid var(--line-soft); border-radius:10px}
+.tt-t{font-size:14px}
+.tt-t th{position:sticky; top:0; background:var(--cell); z-index:1; white-space:nowrap}
+.tt-t td{vertical-align:top; max-width:16em}
+.tt-t td.d{white-space:nowrap; font-weight:600}
+.tt-t td.keep{color:var(--ink-3); text-decoration:line-through}
+.tt-t td.over{background:#fff4dc}
+.tt-t td:first-child{width:7.5em} .tt-t td:nth-child(2),.tt-t td:nth-child(3){width:auto}
+.tt-t th:nth-child(n+2){text-align:left}
 </style>
 </head>
 <body>
@@ -1029,6 +1053,7 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
     <button type="button" id="bkBtn" aria-haspopup="dialog">기록 저장 · 불러오기</button>
     <button type="button" id="cfgBtn" aria-haspopup="dialog">설정</button>
     <button type="button" id="layBtn">화면 배치</button>
+    <button type="button" id="ttBtn">시간표 PDF로 넣기</button>
     <button type="button" id="mobBtn">휴대폰 입력 화면</button>
   </div>
   </div>
@@ -1376,6 +1401,26 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
     <div class="btns" style="justify-content:flex-start"><button class="b" id="schAdd" type="button">줄 더하기</button><button class="b" id="schDef" type="button">처음 시정표로</button><span class="sp"></span><button class="b go" id="schSave" type="button">저장</button></div>
   </div>
 </div>
+<div id="ttDlg" class="dlg-wrap" hidden>
+  <div class="sheet-dlg tt-dlg" role="dialog" aria-modal="true" aria-labelledby="ttTitle">
+    <div class="roster-head"><span id="ttTitle">시간표 PDF로 넣기</span><span class="sp"></span><button class="mini" id="ttClose" type="button">닫기</button></div>
+    <p class="st-help">나이스에서 내려받은 <b>교육과정 연간지도계획</b> PDF를 고르면, 날짜마다 1교시부터 차례로 공부할 내용을 채워요. 아침활동과 점심시간은 시정표를 보고 건너뛰어요. 파일은 이 컴퓨터 안에서만 읽고 어디로도 보내지 않아요.</p>
+    <div class="tt-top">
+      <label class="b go tt-file">PDF 고르기<input type="file" id="ttFile" accept="application/pdf,.pdf" hidden></label>
+      <span class="tt-name" id="ttName">아직 고른 파일이 없어요</span>
+    </div>
+    <div class="tt-opts">
+      <span class="tt-lab">넣을 내용</span>
+      <label><input type="radio" name="ttMode" value="subj"> 과목만 <small>예) 국어</small></label>
+      <label><input type="radio" name="ttMode" value="topic" checked> 과목과 학습주제 <small>예) 국어 · 시를 읽고 장면 상상하기 -1-</small></label>
+      <label class="tt-over"><input type="checkbox" id="ttOver"> 이미 적어 둔 칸도 바꾸기</label>
+    </div>
+    <div class="tt-sum" id="ttSum"></div>
+    <div class="tt-wrap"><table class="sch-t tt-t"><thead id="ttHead"></thead><tbody id="ttBody"></tbody></table></div>
+    <div class="sch-err" id="ttErr"></div>
+    <div class="btns" style="justify-content:flex-start"><button class="b" id="ttUndo" type="button" hidden>방금 넣은 것 되돌리기</button><span class="sp"></span><button class="b go" id="ttApply" type="button" disabled>시간표에 넣기</button></div>
+  </div>
+</div>
 <div id="sheetDlg" class="dlg-wrap" hidden>
   <div class="sheet-dlg" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
     <div class="roster-head"><span id="sheetTitle">출결·확인 기록표</span><span class="sp"></span><button class="mini" id="sheetClose" type="button">닫기</button></div>
@@ -1385,7 +1430,7 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 
 <canvas id="fx" aria-hidden="true"></canvas>
 <div id="vBubble" role="status" aria-live="polite" hidden></div>
-<div id="verTag">개굴칠판 · 11월 12일 판 · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.ko" target="_blank" rel="noopener license" title="출처를 밝히면 비영리로 자유롭게 쓸 수 있어요 (CC BY-NC 4.0)">© 2026 정예훈(개굴정)</a></div>
+<div id="verTag">개굴칠판 · 11월 16일 판 · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.ko" target="_blank" rel="noopener license" title="출처를 밝히면 비영리로 자유롭게 쓸 수 있어요 (CC BY-NC 4.0)">© 2026 정예훈(개굴정)</a></div>
 
 <div id="bkDlg" hidden>
   <div class="roster bk" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
@@ -1591,7 +1636,7 @@ let S = fresh(), ref = null, saveTimer = null;
 function local(get, v){ try{ if (get) return JSON.parse(localStorage.getItem('jgg-state') || 'null'); localStorage.setItem('jgg-state', JSON.stringify(v)); }catch(e){ return null; } }
 function prune(obj, keep){ const ks = Object.keys(obj).sort(); ks.slice(0, Math.max(0, ks.length - keep)).forEach(k => delete obj[k]); }
 function save(){
-  prune(S.meals, 100); prune(S.hw, 120); prune(S.plan, 120); prune(S.words, 200); prune(S.att, 200); if (S.wxLog) prune(S.wxLog, 200); if (S.praiseLog) prune(S.praiseLog, 200);
+  prune(S.meals, 100); prune(S.hw, 120); prune(S.plan, 400); prune(S.words, 200); prune(S.att, 200); if (S.wxLog) prune(S.wxLog, 200); if (S.praiseLog) prune(S.praiseLog, 200);
   local(false, S);
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
@@ -4402,6 +4447,199 @@ applySched(); renderPeriods(); tick();
 { const _rc = renderClean; renderClean = function(){ _rc(); requestAnimationFrame(() => fitBox($('cleanView'), 44, 12)); }; }
 if (window.ResizeObserver) new ResizeObserver(() => fitBox($('cleanView'), 44, 12)).observe($('cleanView'));
 renderClean();
+/* ===== 교육과정 연간지도계획(나이스) PDF → 날짜별 수업 목록 ===== */
+// pages: [[{s, x, y, w, h}, ...], ...]  (y는 위쪽이 큰 값, PDF 좌표 그대로)
+function ttParsePlan(pages){
+  const HEAD = {wk:'주', per:'기간', day:'요일', subj:'과목명', unit:'단원명', topic:'학습주제', cnt:'차시', page:'쪽수', note:'비고'};
+  const DOW = {'일':0, '월':1, '화':2, '수':3, '목':4, '금':5, '토':6};
+  const all = pages.flat().map(t => t.s).join(' ');
+  const ym = all.replace(/\s+/g, '').match(/(\d{4})학년도(\d)학기/);
+  const year = ym ? +ym[1] : new Date().getFullYear(), term = ym ? +ym[2] : 0;
+  const lessons = [];
+  const median = a => { const b = a.slice().sort((p, q) => p - q); return b.length ? b[b.length >> 1] : 0; };
+  for (const items of pages){
+    const its = items.filter(t => t.s && t.s.trim());
+    // 머리줄 찾기
+    const head = {};
+    for (const k in HEAD){ const h = its.find(t => t.s.replace(/\s/g, '') === HEAD[k]); if (h) head[k] = h; }
+    if (!head.subj || !head.topic || !head.day) continue;
+    const hy = head.subj.y, cx = k => head[k] ? head[k].x + head[k].w / 2 : null;
+    const order = Object.keys(HEAD).filter(k => head[k]).sort((a, b) => cx(a) - cx(b));
+    const colOf = t => {               // 글자 가운데가 가장 가까운 칸
+      const m = t.x + t.w / 2; let best = null, bd = 1e9;
+      for (const k of order){ const d = Math.abs(cx(k) - m); if (d < bd){ bd = d; best = k; } }
+      // 칸 경계(양옆 머리글 가운데의 중간)를 넘으면 그쪽 칸
+      const i = order.indexOf(best);
+      for (let j = 0; j < order.length; j++){
+        const L = j ? (cx(order[j - 1]) + cx(order[j])) / 2 : -1e9, R = j < order.length - 1 ? (cx(order[j]) + cx(order[j + 1])) / 2 : 1e9;
+        if (m >= L && m < R) return order[j];
+      }
+      return order[i];
+    };
+    const body = its.filter(t => t.y < hy - 2);
+    const sy = body.filter(t => colOf(t) === 'subj').map(t => t.y).sort((a, b) => b - a);
+    if (!sy.length) continue;
+    const g0 = []; for (let i = 1; i < sy.length; i++) if (sy[i - 1] - sy[i] > 2) g0.push(sy[i - 1] - sy[i]);
+    const bottom = sy[sy.length - 1] - (median(g0) || 20) * 0.9;   // 맨 아래 수업 줄 밑의 쪽 번호 등은 버림
+    const cells = body.filter(t => t.y > bottom).map(t => {
+      let col = colOf(t);
+      // 학습주제가 길어 차시 칸 쪽으로 넘친 조각은 학습주제로
+      if (col === 'cnt' && !/^\s*\d+\s*\/\s*\d+\s*$/.test(t.s) && t.s.trim()) col = 'topic';
+      return Object.assign({col}, t);
+    });
+    // 한 수업 = 과목명 칸의 글자 한 줄 (같은 높이 조각은 합침)
+    const subj = [];
+    cells.filter(t => t.col === 'subj').sort((a, b) => b.y - a.y || a.x - b.x).forEach(t => {
+      const last = subj[subj.length - 1];
+      if (last && Math.abs(last.y - t.y) < t.h * 0.5) last.s += t.s; else subj.push({s:t.s, y:t.y, h:t.h});
+    });
+    if (!subj.length) continue;
+    const gaps = []; for (let i = 1; i < subj.length; i++) gaps.push(subj[i - 1].y - subj[i].y);
+    const rowH = median(gaps) || subj[0].h * 2;
+    // 다른 칸 글자는 가장 가까운 수업 줄에 붙임
+    const near = y => { let bi = 0, bd = 1e9; subj.forEach((r, i) => { const d = Math.abs(r.y - y); if (d < bd){ bd = d; bi = i; } }); return bi; };
+    const rows = subj.map(r => ({y:r.y, subj:r.s.trim(), unit:[], topic:[], cnt:[], page:[]}));
+    // 앞 쪽에서 이어진 칸(맨 위, 과목명 없는 줄)은 앞 쪽 마지막 수업에 붙임
+    const carry = cells.filter(t => t.y > subj[0].y + rowH * 0.6 && ['unit', 'topic'].includes(t.col));
+    if (carry.length && lessons.length){
+      const L = lessons[lessons.length - 1], add = carry.filter(t => t.col === 'topic').sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s).join('');
+      if (add) L.topic = (L.topic + add).replace(/\s+/g, ' ').trim();
+    }
+    cells.filter(t => ['unit', 'topic', 'cnt', 'page'].includes(t.col) && !carry.includes(t)).forEach(t => rows[near(t.y)][t.col].push(t));
+    const txt = a => {
+      const lines = [];
+      a.sort((p, q) => q.y - p.y || p.x - q.x).forEach(t => {
+        const L = lines[lines.length - 1];
+        if (L && Math.abs(L.y - t.y) < t.h * 0.5) L.s += t.s; else lines.push({y:t.y, s:t.s});
+      });
+      return lines.map(l => l.s).join('').replace(/\s+/g, ' ').trim();
+    };
+    // 합친 칸(요일·기간): 글자는 그 묶음의 세로 가운데에 있음 → 위에서부터 차례로 묶음 경계를 계산
+    const groups = key => {
+      const labs = cells.filter(t => t.col === key).sort((a, b) => b.y - a.y);
+      const merged = [];
+      labs.forEach(t => { const L = merged[merged.length - 1]; if (L && Math.abs(L.y - t.y) < t.h * 0.5) L.s += t.s; else merged.push({s:t.s, y:t.y}); });
+      let top = hy - rowH / 2;   // 머리줄 바로 아래부터
+      return merged.map(l => { const bot = 2 * l.y - top, g = {s:l.s.replace(/\s/g, ''), top, bot}; top = bot; return g; });
+    };
+    const days = groups('day'), pers = groups('per');
+    const pick = (gs, y) => { const g = gs.find(g => y <= g.top + 1 && y > g.bot - 1) || gs.reduce((b, g) => !b || Math.abs((g.top + g.bot) / 2 - y) < Math.abs((b.top + b.bot) / 2 - y) ? g : b, null); return g ? g.s : ''; };
+    rows.forEach(r => {
+      const day = pick(days, r.y), per = pick(pers, r.y);
+      const m = per.match(/(\d{1,2})\.(\d{1,2})/);
+      if (!m || !(day in DOW)) return;
+      const mo = +m[1], d0 = +m[2];
+      const y = year + (term === 2 && mo < 3 ? 1 : 0);
+      const start = new Date(y, mo - 1, d0, 12);
+      const date = new Date(start); date.setDate(d0 + ((DOW[day] - start.getDay() + 7) % 7));
+      lessons.push({date, subj:r.subj, unit:txt(r.unit), topic:txt(r.topic), cnt:txt(r.cnt), page:txt(r.page)});
+    });
+  }
+  const byDay = {};
+  lessons.forEach(l => { const k = dkeyOf(l.date); (byDay[k] = byDay[k] || []).push(l); });
+  return {year, term, lessons, byDay};
+}
+function dkeyOf(d){ return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+async function ttReadPdf(file){
+  const pdfjs = await ttPdfLib();
+  const doc = await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+  const pages = [];
+  for (let i = 1; i <= doc.numPages; i++){
+    const page = await doc.getPage(i), vp = page.getViewport({scale:1}), tc = await page.getTextContent();
+    // 돌려 놓은 쪽(가로 A4)도 화면에 보이는 방향으로 좌표를 바꿔서 읽음 (위쪽이 큰 값)
+    pages.push(tc.items.filter(t => 'str' in t).map(t => {
+      const m = pdfjs.Util.transform(vp.transform, t.transform);
+      return {s:t.str, x:m[4], y:-m[5], w:t.width, h:t.height || Math.hypot(t.transform[2], t.transform[3])};
+    }));
+  }
+  return ttParsePlan(pages);
+}
+/* ===== 시간표 PDF로 넣기 (나이스 교육과정 연간지도계획) ===== */
+let TT_PDF = null, TT = null, TT_UNDO = null;
+async function ttPdfLib(){
+  if (TT_PDF) return TT_PDF;
+  const base = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/';
+  const lib = await import(base + 'pdf.min.mjs');
+  // 다른 주소의 작업 스크립트는 따로 띄울 수 없어서, pdf.js가 이 페이지 안에서 대신 돌림 (20쪽 정도는 금방)
+  lib.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.mjs';
+  return TT_PDF = lib;
+}
+const ttMode = () => (document.querySelector('input[name="ttMode"]:checked') || {}).value || 'topic';
+const ttText = l => ttMode() === 'subj' || !l.topic ? l.subj : `${l.subj} · ${l.topic}`;
+const ttPers = d => todayList(d.getDay()).filter(r => /교시/.test(r.n)).map(r => r.n);
+const ttDate = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 12); };
+// 날짜별로 넣을 내용 계산
+function ttPlanOut(){
+  const over = $('ttOver').checked, out = [];
+  Object.keys(TT.byDay).sort().forEach(k => {
+    const d = ttDate(k), pers = ttPers(d), cur = S.plan[k] || {};
+    const cells = TT.byDay[k].map((l, i) => {
+      const n = pers[i], v = ttText(l);
+      if (!n) return {n:'', v, st:'over'};                 // 시정표보다 수업이 많음
+      if (!over && (cur[n] || '').trim() && cur[n].trim() !== v) return {n, v:cur[n].trim(), st:'keep'};
+      return {n, v, st:'new'};
+    });
+    out.push({k, d, cells});
+  });
+  return out;
+}
+function ttRender(){
+  if (!TT){ $('ttHead').innerHTML = ''; $('ttBody').innerHTML = ''; $('ttSum').innerHTML = ''; $('ttApply').disabled = true; return; }
+  const plan = ttPlanOut(), maxN = Math.max(...plan.map(p => p.cells.length), 1);
+  const ks = plan.map(p => p.k), md = k => { const d = ttDate(k); return `${d.getMonth() + 1}월 ${d.getDate()}일`; };
+  const nNew = plan.reduce((a, p) => a + p.cells.filter(c => c.st === 'new').length, 0);
+  const nKeep = plan.reduce((a, p) => a + p.cells.filter(c => c.st === 'keep').length, 0);
+  const overDays = plan.filter(p => p.cells.some(c => c.st === 'over'));
+  $('ttSum').innerHTML = `<b>${TT.year}학년도 ${TT.term ? TT.term + '학기' : ''}</b> · ${md(ks[0])} ~ ${md(ks[ks.length - 1])} · <b>${ks.length}일</b>, 수업 <b>${TT.lessons.length}개</b>를 읽었어요. 넣을 칸 ${nNew}개`
+    + (nKeep ? ` · 이미 적어 둔 칸 ${nKeep}개는 그대로 둬요(줄 그은 칸)` : '')
+    + (overDays.length ? `<br><span class="warn">시정표보다 수업이 많은 날이 ${overDays.length}일 있어요 (${overDays.slice(0, 4).map(p => md(p.k)).join(', ')}${overDays.length > 4 ? ' 등' : ''}). 노란 칸은 들어가지 않아요. 시계 칸의 '시정표 고치기'에서 그 요일 교시를 확인해 주세요.</span>` : '');
+  $('ttHead').innerHTML = `<tr><th>날짜</th>${Array.from({length:maxN}, (_, i) => `<th>${i + 1}교시</th>`).join('')}</tr>`;
+  $('ttBody').innerHTML = plan.map(p => `<tr><td class="d">${md(p.k)}(${'일월화수목금토'[p.d.getDay()]})</td>${Array.from({length:maxN}, (_, i) => { const c = p.cells[i]; return c ? `<td class="${c.st}" title="${esc(c.n || '교시 없음')}">${esc(c.v)}</td>` : '<td></td>'; }).join('')}</tr>`).join('');
+  $('ttApply').disabled = !nNew;
+}
+function ttOpen(o){
+  $('ttDlg').hidden = !o;
+  if (o){ $('ttErr').textContent = ''; ttRender(); }
+}
+$('ttBtn').onclick = () => ttOpen(true);
+$('ttClose').onclick = () => ttOpen(false);
+$('ttDlg').addEventListener('click', e => { if (e.target === $('ttDlg')) ttOpen(false); });
+document.querySelectorAll('input[name="ttMode"]').forEach(r => r.onchange = ttRender);
+$('ttOver').onchange = ttRender;
+$('ttFile').onchange = async () => {
+  const f = $('ttFile').files[0]; $('ttFile').value = '';
+  if (!f) return;
+  TT = null; ttRender(); $('ttErr').textContent = ''; $('ttName').textContent = `${f.name} 읽는 중…`;
+  try {
+    const r = await ttReadPdf(f);
+    if (!r.lessons.length) throw new Error('empty');
+    TT = r; $('ttName').textContent = f.name; ttRender();
+  } catch (e){
+    $('ttName').textContent = f.name;
+    $('ttErr').textContent = e && e.message === 'empty'
+      ? '이 PDF에서 시간표를 찾지 못했어요. 나이스의 「교육과정 연간지도계획」 PDF가 맞는지 확인해 주세요.'
+      : 'PDF를 읽지 못했어요. 인터넷 연결을 확인하고 다시 골라 주세요.';
+  }
+};
+$('ttApply').onclick = () => {
+  const plan = ttPlanOut(); TT_UNDO = {};
+  let n = 0;
+  plan.forEach(p => p.cells.forEach(c => {
+    if (c.st !== 'new') return;
+    if (!(p.k in TT_UNDO)) TT_UNDO[p.k] = S.plan[p.k] ? Object.assign({}, S.plan[p.k]) : null;
+    S.plan[p.k] = Object.assign({}, S.plan[p.k], {[c.n]: c.v}); n++;
+  }));
+  save(); renderPeriods(); try { renderAll(); } catch (e){}
+  $('ttUndo').hidden = false; ttRender();
+  bubble(`시간표 ${n}칸을 넣었어요`, '', 3000);
+};
+$('ttUndo').onclick = () => {
+  if (!TT_UNDO) return;
+  Object.keys(TT_UNDO).forEach(k => { if (TT_UNDO[k]) S.plan[k] = TT_UNDO[k]; else delete S.plan[k]; });
+  TT_UNDO = null; $('ttUndo').hidden = true;
+  save(); renderPeriods(); try { renderAll(); } catch (e){}
+  ttRender(); bubble('넣기 전으로 되돌렸어요', '', 2500);
+};
 </script>
 </body>
 </html>
