@@ -1015,6 +1015,35 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 .tt-t td.over{background:#fff4dc}
 .tt-t td:first-child{width:7.5em} .tt-t td:nth-child(2),.tt-t td:nth-child(3){width:auto}
 .tt-t th:nth-child(n+2){text-align:left}
+/* 달력 주간 일정: 날짜 숫자에 형광펜 */
+.day .dn{position:relative; padding:0 .18em; border-radius:.2em}
+.day.wkh .dn{background:linear-gradient(transparent 38%, rgba(255,214,64,.78) 38%, rgba(255,214,64,.78) 92%, transparent 92%)}
+.day.wkh.other .dn{background:linear-gradient(transparent 38%, rgba(255,214,64,.35) 38%, rgba(255,214,64,.35) 92%, transparent 92%)}
+/* 시간표 크게 볼 때 '수업 내용 보기' */
+.now-det{display:none}
+.cell.big .now-det{display:inline-flex; position:absolute; top:clamp(8px,.7vw,14px); right:calc(clamp(10px,.9vw,18px) + 4.6em); z-index:2; font-size:clamp(16px,1.1vw,22px)}
+.now-det[aria-pressed="true"]{background:var(--teal-soft); color:var(--teal)}
+.c-now.big .per input{text-overflow:ellipsis}
+/* 새 학년 준비 */
+#yrDlg{position:fixed; inset:0; z-index:48; background:rgba(28,43,37,.45); display:flex; align-items:center; justify-content:center; padding:16px}
+.yr-dlg{width:min(680px,94vw); height:auto; max-height:92vh; container-type:normal; gap:14px; overflow:auto}
+.yr-dlg .b{font-size:16px; padding:.5em 1.4em}
+.yr-list{display:flex; flex-direction:column; gap:10px}
+.yr-item{display:flex; gap:.7em; align-items:flex-start; padding:12px 14px; border:1px solid var(--line-soft); border-radius:12px; cursor:pointer; font-size:17px}
+.yr-item input{margin-top:.3em; width:1.1em; height:1.1em}
+.yr-item span{display:flex; flex-direction:column; gap:2px}
+.yr-item small{color:var(--ink-2); font-size:14px}
+.yr-keep{font-size:14px; color:var(--ink-2); margin:0}
+.yr-ok{display:flex; gap:.5em; align-items:center; font-size:15px; color:#9a3b00; cursor:pointer}
+#yrMsg.ok{color:var(--teal)}
+/* 크게 + 수업 내용 보기: 시간표 칸을 넓히고 여러 줄로 */
+.c-now.big.ttfull .now-wrap{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+.c-now.big.ttfull .time{font-size:min(12cqw,34cqh)}
+.c-now.big.ttfull #activity{font-size:min(3.8cqw,9cqh)}
+.c-now.big.ttfull .per{height:auto; min-height:min(10cqh,3.1em); padding:.3em .7em; grid-template-columns:4.4em 6.2em minmax(0,1fr)}
+.per textarea{width:100%; min-width:0; border:none; border-bottom:1px dashed transparent; background:transparent; font-family:var(--display); font-size:.86em; line-height:1.3; padding:.15em 0; color:var(--ink); resize:none; overflow:hidden; field-sizing:content; max-height:4em}
+.per:hover textarea,.per textarea:focus{border-bottom-color:var(--line)}
+.per textarea::placeholder{color:#cbd7d1; font-family:var(--body); font-size:.85em}
 </style>
 </head>
 <body>
@@ -1054,6 +1083,7 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
     <button type="button" id="cfgBtn" aria-haspopup="dialog">설정</button>
     <button type="button" id="layBtn">화면 배치</button>
     <button type="button" id="ttBtn">시간표 PDF로 넣기</button>
+    <button type="button" id="yrBtn">새 학년 준비</button>
     <button type="button" id="mobBtn">휴대폰 입력 화면</button>
   </div>
   </div>
@@ -1077,6 +1107,7 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 
   <section class="cell c-now" id="cNow">
     <button class="mini now-sch" id="schBtn" type="button">시정표 고치기</button>
+    <button class="mini now-det" id="ttDetBtn" type="button" aria-pressed="true">수업 내용 보기 ✓</button>
     <button class="mini now-big" type="button" data-big>크게</button>
     <div class="now-wrap">
       <div class="now-left">
@@ -1404,19 +1435,34 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 <div id="ttDlg" class="dlg-wrap" hidden>
   <div class="sheet-dlg tt-dlg" role="dialog" aria-modal="true" aria-labelledby="ttTitle">
     <div class="roster-head"><span id="ttTitle">시간표 PDF로 넣기</span><span class="sp"></span><button class="mini" id="ttClose" type="button">닫기</button></div>
-    <p class="st-help">나이스에서 내려받은 <b>교육과정 연간지도계획</b> PDF를 고르면, 날짜마다 1교시부터 차례로 과목을 채워요. 아침활동과 점심시간은 시정표를 보고 건너뛰어요. 파일은 이 컴퓨터 안에서만 읽고 어디로도 보내지 않아요.</p>
+    <p class="st-help">나이스에서 내려받은 <b>교육과정 연간지도계획</b> PDF를 고르면, 날짜마다 1교시부터 차례로 과목과 학습주제를 채워요. 아침활동과 점심시간은 시정표를 보고 건너뛰어요. 파일은 이 컴퓨터 안에서만 읽고 어디로도 보내지 않아요.</p>
     <div class="tt-top">
       <label class="b go tt-file">PDF 고르기<input type="file" id="ttFile" accept="application/pdf,.pdf" hidden></label>
       <span class="tt-name" id="ttName">아직 고른 파일이 없어요</span>
     </div>
     <div class="tt-opts">
-      <span class="tt-lab">칸에는 과목 이름만 들어가요 <small>예) 국어, 수학, 슬기로운생활</small></span>
+      <span class="tt-lab">과목과 학습주제를 함께 넣어요 <small>작은 화면에는 과목만, 시간표를 크게 보면 학습주제까지 보여요</small></span>
       <label class="tt-over"><input type="checkbox" id="ttOver"> 이미 적어 둔 칸도 바꾸기</label>
     </div>
     <div class="tt-sum" id="ttSum"></div>
     <div class="tt-wrap"><table class="sch-t tt-t"><thead id="ttHead"></thead><tbody id="ttBody"></tbody></table></div>
     <div class="sch-err" id="ttErr"></div>
     <div class="btns" style="justify-content:flex-start"><button class="b" id="ttUndo" type="button" hidden>방금 넣은 것 되돌리기</button><span class="sp"></span><button class="b go" id="ttApply" type="button" disabled>시간표에 넣기</button></div>
+  </div>
+</div>
+<div id="yrDlg" class="dlg-wrap" hidden>
+  <div class="sheet-dlg yr-dlg" role="dialog" aria-modal="true" aria-labelledby="yrTitle">
+    <div class="roster-head"><span id="yrTitle">새 학년 준비</span><span class="sp"></span><button class="mini" id="yrClose" type="button">닫기</button></div>
+    <p class="st-help">학년이 바뀔 때 지난 학년 기록을 비우고 새로 시작해요. 비우기 전에 <b>지금까지의 기록을 파일로 먼저 내려받으니</b>, 필요하면 '기록 저장 · 불러오기'로 언제든 다시 불러올 수 있어요.</p>
+    <div class="yr-list">
+      <label class="yr-item"><input type="checkbox" id="yrRec" checked><span><b>학생 기록</b><small>출결, 학급 체크, 아이 기록, 칭찬 별, 뽑기 순서, 교무수첩에 적은 내용</small></span></label>
+      <label class="yr-item"><input type="checkbox" id="yrPlan" checked><span><b>일정과 시간표</b><small>달력 일정, 주간 일정, 날짜별 시간표, 알림장, 디데이, 메모장</small></span></label>
+      <label class="yr-item"><input type="checkbox" id="yrClass" checked><span><b>우리 반 명단과 역할</b><small>학생 이름, 1인 1역 담당 학생, 자리 배치, 모둠 점수, 뽑기 빼기·미루기</small></span></label>
+    </div>
+    <p class="yr-keep">그대로 두는 것: 학교와 날씨 지역, 시정표, 화면 배치, 설정, 1인 1역 역할 이름, 완전 동기화 연결, 교무수첩 비밀번호</p>
+    <label class="yr-ok"><input type="checkbox" id="yrSure"> 고른 기록을 비우면 화면에서 되돌릴 수 없다는 것을 알아요</label>
+    <div class="sch-err" id="yrMsg"></div>
+    <div class="btns"><button class="b" id="yrSetup" type="button" hidden>처음 설정 열기</button><span class="sp"></span><button class="b go" id="yrGo" type="button" disabled>기록 파일 받고 새 학년 시작</button></div>
   </div>
 </div>
 <div id="sheetDlg" class="dlg-wrap" hidden>
@@ -1428,7 +1474,7 @@ body.lay-edit .c-now,body.lay-edit .c-cal{opacity:.35; filter:grayscale(.4); poi
 
 <canvas id="fx" aria-hidden="true"></canvas>
 <div id="vBubble" role="status" aria-live="polite" hidden></div>
-<div id="verTag">개굴칠판 · 11월 16일 판 · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.ko" target="_blank" rel="noopener license" title="출처를 밝히면 비영리로 자유롭게 쓸 수 있어요 (CC BY-NC 4.0)">© 2026 정예훈(개굴정)</a></div>
+<div id="verTag">개굴칠판 · 11월 20일 판 · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.ko" target="_blank" rel="noopener license" title="출처를 밝히면 비영리로 자유롭게 쓸 수 있어요 (CC BY-NC 4.0)">© 2026 정예훈(개굴정)</a></div>
 
 <div id="bkDlg" hidden>
   <div class="roster bk" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
@@ -1709,14 +1755,14 @@ function activity(now){
   else if (mins >= toMin(last.e)) text = /점심/.test(last.n) ? '점심 먹고 하교' : '하교 시간';
   else if (prev && /점심/.test(prev.n) && next) text = '청소 시간';
   else text = '쉬는 시간';
-  const plan = idx >= 0 && !ready ? planOf(list[idx].n, now) : '';
+  const plan = idx >= 0 && !ready ? (typeof ttShow === 'function' ? ttShow(planOf(list[idx].n, now)) : planOf(list[idx].n, now)) : '';
   return {text, plan, idx, list, mins, ready};
 }
 function renderPeriods(){
   const day = viewDay().getDay(), list = (day === 0 || day === 6) ? SCHEDULE.filter(r => !r.skipDays) : todayList(day);
   $('periods').innerHTML = list.map(r => {
     const ph = r.n === '점심시간' ? '' : '공부할 내용';
-    return `<div class="per"><b>${r.n}</b><small>${r.s} ~ ${r.e}</small><input data-per="${r.n}" value="${esc(planOf(r.n))}" placeholder="${ph}" aria-label="${r.n} 공부할 내용"></div>`;
+    return `<div class="per"><b>${r.n}</b><small>${r.s} ~ ${r.e}</small><input data-per="${r.n}" value="${esc(typeof ttShow === 'function' ? ttShow(planOf(r.n)) : planOf(r.n))}" placeholder="${ph}" aria-label="${r.n} 공부할 내용"></div>`;
   }).join('');
   $('periods').querySelectorAll('[data-per]').forEach(inp => inp.oninput = () => {
     const k = dkey(viewDay()); S.plan[k] = S.plan[k] || {}; S.plan[k][inp.dataset.per] = inp.value; save(); armDayBack();
@@ -1770,9 +1816,9 @@ function renderCal(){
     if (d.getDay() === 0) cls.push('sun'); if (d.getDay() === 6) cls.push('sat');
     if (k === dkey()) cls.push('today'); if (k === selDate) cls.push('sel');
     if ((S.events[k] || []).some(x => x.h)) cls.push('hol');
+    if (wks(k).length) cls.push('wkh');
     const v = visible(k), dots = (v.some(x => x.c === 's') ? '<i class="s"></i>' : '') + (v.some(x => x.c === 'w') ? '<i class="w"></i>' : '');
-    cells.push(`<button class="${cls.join(' ')}" type="button" data-date="${k}" aria-label="${d.getMonth()+1}월 ${d.getDate()}일">${d.getDate()}<span class="dots">${dots}</span></button>`);
-    if (d.getDay() === 6 && wks(k).length) cells.push(`<div class="wk">${wks(k).map(x => `<span title="${esc(x.t)}">${esc(x.t)}</span>`).join('')}</div>`);
+    cells.push(`<button class="${cls.join(' ')}" type="button" data-date="${k}" aria-label="${d.getMonth()+1}월 ${d.getDate()}일${wks(k).length ? ' · 주간 일정 있음' : ''}" title="${esc(wks(k).map(x => x.t).join(', '))}"><span class="dn">${d.getDate()}</span><span class="dots">${dots}</span></button>`);
   }
   $('cal').innerHTML = cells.join('');
   $('cal').querySelectorAll('[data-date]').forEach(b => b.onclick = () => {
@@ -4562,7 +4608,7 @@ async function ttPdfLib(){
   lib.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.mjs';
   return TT_PDF = lib;
 }
-const ttText = l => l.subj;   // 칸이 좁아 과목 이름만 넣음
+const ttText = l => l.topic ? `${l.subj} · ${l.topic}` : l.subj;   // 작은 화면은 과목만, 크게 보면 학습주제까지
 const ttPers = d => todayList(d.getDay()).filter(r => /교시/.test(r.n)).map(r => r.n);
 const ttDate = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 12); };
 // 날짜별로 넣을 내용 계산
@@ -4574,8 +4620,8 @@ function ttPlanOut(){
       const n = pers[i], v = ttText(l);
       if (!n) return {n:'', v, st:'over'};                 // 시정표보다 수업이 많음
       const was = (cur[n] || '').trim();
-      // 전에 'PDF로 넣은 과목 · 학습주제'는 과목만으로 바꿔도 되는 칸으로 봄
-      if (!over && was && was !== v && !was.startsWith(v + ' · ')) return {n, v:was, st:'keep'};
+      // 전에 PDF로 넣은 칸(같은 과목, 또는 '같은 과목 · 내용')은 새로 넣어도 되는 칸으로 봄
+      if (!over && was && was !== v && was !== l.subj && !was.startsWith(l.subj + ' · ')) return {n, v:was, st:'keep'};
       return {n, v, st:'new'};
     });
     out.push({k, d, cells});
@@ -4638,6 +4684,80 @@ $('ttUndo').onclick = () => {
   save(); renderPeriods(); try { renderAll(); } catch (e){}
   ttRender(); bubble('넣기 전으로 되돌렸어요', '', 2500);
 };
+/* ===== 시간표: 작은 화면은 과목만, 크게 보면 수업 내용까지 (고를 수 있음) ===== */
+function ttFull(){ const c = $('cNow'); return !!(c && c.classList.contains('big')) && cfg().ttDetail !== false; }
+function ttShort(t){ return (t || '').split(' · ')[0].trim(); }
+function ttShow(t){ return ttFull() ? (t || '') : ttShort(t); }
+function ttDetBtn(){ const b = $('ttDetBtn'); if (b){ const on = cfg().ttDetail !== false; b.setAttribute('aria-pressed', on); b.textContent = on ? '수업 내용 보기 ✓' : '수업 내용 보기'; } }
+{
+  const _rp = renderPeriods;
+  renderPeriods = function(){
+    _rp();
+    const full = ttFull();
+    $('cNow').classList.toggle('ttfull', full);
+    // 크게 + 수업 내용 보기: 한 줄 입력칸 대신 여러 줄로 보이는 칸
+    if (full) $('periods').querySelectorAll('input[data-per]').forEach(inp => {
+      const ta = document.createElement('textarea');
+      ta.dataset.per = inp.dataset.per; ta.value = inp.value; ta.placeholder = inp.placeholder; ta.rows = 1;
+      ta.setAttribute('aria-label', inp.getAttribute('aria-label') || ''); ta.oninput = inp.oninput;
+      inp.replaceWith(ta);
+    });
+    // 고칠 때는 전체 내용, 다 고치면 다시 화면에 맞게 줄여 보여 줌
+    $('periods').querySelectorAll('[data-per]').forEach(inp => {
+      inp.title = planOf(inp.dataset.per);
+      inp.onfocus = () => { const f = planOf(inp.dataset.per); if (inp.value !== f) inp.value = f; };
+      inp.onblur = () => { const f = planOf(inp.dataset.per); inp.title = f; inp.value = ttShow(f); };
+    });
+    ttDetBtn();
+  };
+  const _ob = openBig, _cb = closeBig;
+  openBig = function(c){ _ob(c); renderPeriods(); };
+  closeBig = function(){ _cb.apply(this, arguments); renderPeriods(); };
+}
+$('ttDetBtn').onclick = () => { S.cfg = S.cfg || {}; S.cfg.ttDetail = !(cfg().ttDetail !== false); save(); renderPeriods(); };
+renderPeriods();
+
+/* ===== 새 학년 준비 (지난 기록 비우기) ===== */
+function yrOpen(o){
+  $('yrDlg').hidden = !o;
+  if (o){ $('yrSure').checked = false; $('yrGo').disabled = true; $('yrMsg').textContent = ''; $('yrMsg').className = 'sch-err'; $('yrSetup').hidden = true; }
+}
+$('yrBtn').onclick = () => yrOpen(true);
+$('yrClose').onclick = () => yrOpen(false);
+$('yrDlg').addEventListener('click', e => { if (e.target === $('yrDlg')) yrOpen(false); });
+const yrPicked = () => $('yrRec').checked || $('yrPlan').checked || $('yrClass').checked;
+['yrSure', 'yrRec', 'yrPlan', 'yrClass'].forEach(id => $(id).onchange = () => { $('yrGo').disabled = !($('yrSure').checked && yrPicked()); });
+$('yrGo').onclick = () => {
+  // 1) 지금까지의 기록을 파일로 먼저 받기
+  try {
+    const blob = new Blob([pack()], {type:'application/json'}), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `우리반_기록_${dkey()}_새학년준비전.json`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  } catch (e){ $('yrMsg').textContent = '기록 파일을 받지 못해서 비우지 않았어요. 다시 눌러 주세요.'; return; }
+  // 2) 고른 것만 비우기
+  if ($('yrRec').checked){
+    S.att = {}; S.hw = {}; S.notes = {}; S.praise = {}; S.praiseLog = {}; S.pickUsed = []; S.wxLog = {};
+    const nb = nbData(); nb.days = {};
+  }
+  if ($('yrPlan').checked){
+    S.events = {}; S.weekly = {}; S.plan = {}; S.notice = {}; S.dday = []; S.memo = ''; S.meals = {};
+    delete S.neisCal;
+  }
+  if ($('yrClass').checked){
+    S.names = {}; S.pickRule = {};
+    (S.cleaning || []).forEach(c => c.w = '');
+    if (S.seat){ delete S.seat.map; S.seat.fix = {}; S.seat.avoid = []; }
+    if (S.teams){ S.teams.score = []; }
+  }
+  save();
+  try { renderAll(); } catch (e){}
+  try { renderPeriods(); renderCal(); } catch (e){}
+  $('yrMsg').className = 'sch-err ok';
+  $('yrMsg').textContent = '새 학년 준비가 끝났어요. 받은 기록 파일은 다운로드 폴더에 있어요. 학년·반이 바뀌었다면 학교와 반 설정도 새로 맞춰 주세요.';
+  $('yrSure').checked = false; $('yrGo').disabled = true;
+  if ($('suBtn')) $('yrSetup').hidden = false;
+};
+$('yrSetup').onclick = () => { yrOpen(false); $('suBtn').click(); };
 </script>
 </body>
 </html>
